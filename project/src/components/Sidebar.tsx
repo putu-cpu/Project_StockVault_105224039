@@ -1,4 +1,4 @@
-import { Building2, ChevronRight, Folder, LayoutDashboard, Leaf, LogOut, PackageCheck, PackageSearch, Truck } from "lucide-react";
+import { Building2, ChevronRight, Folder, LayoutDashboard, Leaf, PackageCheck, PackageSearch, Truck } from "lucide-react";
 import { hotelPartners } from "../data/mockData";
 import type { User } from "../types";
 
@@ -19,7 +19,7 @@ export function Sidebar({ user, workspace, pendingCount, mobileOpen, onNavigate,
 
   return (
     <aside className={`sidebar ${mobileOpen ? "sidebar-mobile-open" : ""}`}>
-      <button className="brand sidebar-brand" type="button" onClick={() => onNavigate("overview")} aria-label="StokVault home">
+      <button className="brand sidebar-brand" type="button" onClick={onSignOut} aria-label="Sign out of StokVault">
         <span className="brand-mark"><Leaf aria-hidden="true" size={20} strokeWidth={2.3} /></span>
         <span className="brand-word">Stok<span>Vault</span><small>VERIFIABLE STOCK LEDGER</small></span>
       </button>
@@ -69,7 +69,6 @@ export function Sidebar({ user, workspace, pendingCount, mobileOpen, onNavigate,
       <div className="profile-button">
         <span className="avatar">{user.name.split(" ").map((part) => part[0]).slice(0, 2).join("")}</span>
         <span className="min-w-0 flex-1 text-left"><span className="block truncate text-sm font-semibold">{user.name}</span><span className="mt-0.5 block truncate text-xs text-stone-500">{user.email}</span></span>
-        <button className="icon-button sign-out-button" type="button" onClick={onSignOut} aria-label="Sign out"><LogOut aria-hidden="true" size={16} /></button>
       </div>
     </aside>
   );

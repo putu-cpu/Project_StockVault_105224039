@@ -6,7 +6,7 @@ import { HotelDashboardPage } from "./pages/HotelDashboardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { SellerDashboardPage } from "./pages/SellerDashboardPage";
 import { generateDataHash } from "./utils/crypto";
-import type { Item, PaymentMethod, Transaction, TransactionItem, User } from "./types";
+import type { DeliveryStatus, Item, PaymentMethod, Transaction, TransactionItem, User } from "./types";
 
 async function signDeliverySnapshot(transaction: Transaction, items: TransactionItem[]) {
   const payload = {
@@ -34,11 +34,11 @@ export default function App() {
     : transactions;
   const pendingOrders = visibleTransactions.filter((entry) => entry.status === "PENDING").length;
 
-  function createOrder(items: TransactionItem[], targetHotelId?: string) {
-    const hotelId = targetHotelId ?? user?.hotelId;
-    if (!user || !hotelId || user.role === "BUYER" && user.hotelId !== hotelId || user.role === "SELLER" && !targetHotelId) return;
+  function createOrder(items: TransactionItem[], durationMonths = 1) {
+    const hotelId = user?.hotelId;
+    if (!user || user.role !== "BUYER" || !hotelId) return;
     const partner = hotelPartners.find((entry) => entry.id === hotelId);
-    if (!partner || items.length === 0 || items.some((line) => !masterCatalog.some((item) => item.id === line.item.id))) return;
+    if (!partner || ![1, 2, 6, 12].includes(durationMonths) || items.length === 0 || items.some((line) => !masterCatalog.some((item) => item.id === line.item.id))) return;
     const dateKey = new Date().toISOString().slice(2, 7).replace("-", "");
     let sequence = transactions.length + 1;
     let id = `LF-${dateKey}-${String(sequence).padStart(3, "0")}`;
@@ -52,8 +52,15 @@ export default function App() {
       hotel: partner.name,
       location: partner.location,
       createdAt: new Date().toISOString().slice(0, 10),
+      contractDurationMonths: durationMonths,
+      monthlyInvoices: Array.from({ length: durationMonths }, (_, index) => {
+        const dueDate = new Date();
+        dueDate.setDate(1);
+        dueDate.setMonth(dueDate.getMonth() + index);
+        return { month: index + 1, dueDate: dueDate.toISOString().slice(0, 10), paymentStatus: "UNPAID" as const };
+      }),
       status: "PENDING",
-      deliveryStatus: "IN_TRANSIT",
+      deliveryStatus: "PREPARING",
       paymentStatus: "UNPAID",
       items: items.map((line) => ({ ...line, quantityReceived: 0, remainingStock: 0, remainingStockConfirmed: false })),
     };
@@ -62,7 +69,7 @@ export default function App() {
 
   async function lockHotelDelivery(transactionId: string, receivedQuantities: Record<string, number>) {
     const transaction = transactions.find((entry) => entry.id === transactionId);
-    if (user?.role !== "BUYER" || !user.hotelId || transaction?.hotelId !== user.hotelId || transaction.status !== "PENDING" || transaction.deliveryStatus !== "DELIVERED") {
+    if (user?.role !== "BUYER" || !user.hotelId || transaction?.hotelId !== user.hotelId || transaction.status !== "PENDING" || transaction.deliveryStatus !== "ARRIVED") {
       throw new Error("This hotel account cannot lock the selected transaction.");
     }
     const items = transaction.items.map((line) => {
@@ -123,28 +130,40 @@ export default function App() {
       : entry));
   }
 
-  function confirmDeliveryArrival(transactionId: string) {
+  function updateDeliveryStatus(transactionId: string, deliveryStatus: DeliveryStatus) {
+    if (user?.role !== "SELLER" || deliveryStatus === "ARRIVED") return;
+    setTransactions((current) => current.map((transaction) => transaction.id === transactionId && transaction.status === "PENDING"
+      && transaction.deliveryStatus !== "ARRIVED"
+      ? { ...transaction, deliveryStatus }
+      : transaction));
+  }
+
+  function confirmHotelArrival(transactionId: string) {
     if (user?.role !== "BUYER" || !user.hotelId) return;
     setTransactions((current) => current.map((transaction) => transaction.id === transactionId
       && transaction.hotelId === user.hotelId
       && transaction.status === "PENDING"
-      ? { ...transaction, deliveryStatus: "DELIVERED" }
+      && transaction.deliveryStatus === "IN_TRANSIT"
+      ? { ...transaction, deliveryStatus: "ARRIVED" }
       : transaction));
   }
 
   function updateStock(transactionId: string, itemId: string, remainingStock: number) {
     if (user?.role !== "BUYER" || !user.hotelId) return;
     setTransactions((current) => current.map((transaction) => {
-      if (transaction.id !== transactionId || transaction.hotelId !== user.hotelId || (transaction.status !== "LOCKED" && transaction.status !== "TERMINATED") || transaction.paymentStatus !== "UNPAID") return transaction;
+      if (transaction.id !== transactionId || transaction.hotelId !== user.hotelId || (transaction.status !== "LOCKED" && transaction.status !== "TERMINATION_REQUESTED" && transaction.status !== "TERMINATED") || transaction.paymentStatus !== "UNPAID") return transaction;
       return { ...transaction, items: transaction.items.map((line) => line.item.id === itemId ? { ...line, remainingStock, remainingStockConfirmed: true } : line) };
     }));
   }
 
-  function confirmPayment(transactionId: string, method: PaymentMethod, receiptName?: string) {
+  function confirmPayment(transactionId: string, invoiceMonth: number, method: PaymentMethod, receiptName?: string) {
     if (user?.role !== "BUYER" || !user.hotelId) return;
     setTransactions((current) => current.map((transaction) => {
-      if (transaction.id !== transactionId || transaction.hotelId !== user.hotelId || (transaction.status !== "LOCKED" && transaction.status !== "TERMINATED") || transaction.paymentStatus !== "UNPAID" || transaction.items.some((line) => !line.remainingStockConfirmed)) return transaction;
-      return { ...transaction, paymentStatus: "PAID", paymentMethod: method, paymentReceiptName: receiptName };
+      if (transaction.id !== transactionId || transaction.hotelId !== user.hotelId || (transaction.status !== "LOCKED" && transaction.status !== "TERMINATION_REQUESTED" && transaction.status !== "TERMINATED") || transaction.items.some((line) => !line.remainingStockConfirmed) || !transaction.monthlyInvoices.some((invoice) => invoice.month === invoiceMonth && invoice.paymentStatus === "UNPAID")) return transaction;
+      const monthlyInvoices = transaction.monthlyInvoices.map((invoice) => invoice.month === invoiceMonth && invoice.paymentStatus === "UNPAID"
+        ? { ...invoice, paymentStatus: "PAID" as const, paymentMethod: method, paymentReceiptName: receiptName }
+        : invoice);
+      return { ...transaction, monthlyInvoices, paymentStatus: monthlyInvoices.every((invoice) => invoice.paymentStatus === "PAID") ? "PAID" : "UNPAID", paymentMethod: method, paymentReceiptName: receiptName };
     }));
   }
 
@@ -153,7 +172,14 @@ export default function App() {
     setTransactions((current) => current.map((transaction) => transaction.id === transactionId
       && transaction.hotelId === user.hotelId
       && transaction.status === "LOCKED"
-      ? { ...transaction, status: "TERMINATED" }
+      ? { ...transaction, status: "TERMINATION_REQUESTED" }
+      : transaction));
+  }
+
+  function reviewTerminationRequest(transactionId: string, approved: boolean) {
+    if (user?.role !== "SELLER") return;
+    setTransactions((current) => current.map((transaction) => transaction.id === transactionId && transaction.status === "TERMINATION_REQUESTED"
+      ? { ...transaction, status: approved ? "TERMINATED" : "LOCKED" }
       : transaction));
   }
 
@@ -194,7 +220,7 @@ export default function App() {
 
         <div className="content-wrap">
           {user.role === "SELLER" ? (
-            <SellerDashboardPage key={workspaceMountKey} transactions={visibleTransactions} catalog={masterCatalog} workspace={workspace} onNavigate={navigate} onSaveCatalog={updateCatalog} onCreateDelivery={(hotelId, items) => createOrder(items, hotelId)} onRequestEdit={requestEditAccess} onSaveEdit={saveApprovedEdit} onDeleteRecord={deleteTerminatedRecord} />
+            <SellerDashboardPage key={workspaceMountKey} transactions={visibleTransactions} catalog={masterCatalog} workspace={workspace} onNavigate={navigate} onSaveCatalog={updateCatalog} onUpdateDeliveryStatus={updateDeliveryStatus} onReviewTermination={reviewTerminationRequest} onRequestEdit={requestEditAccess} onSaveEdit={saveApprovedEdit} onDeleteRecord={deleteTerminatedRecord} />
           ) : (
             <HotelDashboardPage
               key={workspaceMountKey}
@@ -203,7 +229,7 @@ export default function App() {
               transactions={visibleTransactions}
               catalog={masterCatalog}
               onCreateOrder={createOrder}
-              onConfirmDeliveryArrival={confirmDeliveryArrival}
+              onConfirmArrival={confirmHotelArrival}
               onLockDelivery={lockHotelDelivery}
               onUpdateStock={updateStock}
               onConfirmPayment={confirmPayment}

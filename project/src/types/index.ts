@@ -1,6 +1,6 @@
-export type TransactionStatus = "PENDING" | "LOCKED" | "TERMINATED";
+export type TransactionStatus = "PENDING" | "LOCKED" | "TERMINATION_REQUESTED" | "TERMINATED";
 
-export type DeliveryStatus = "IN_TRANSIT" | "DELIVERED";
+export type DeliveryStatus = "PREPARING" | "IN_TRANSIT" | "ARRIVED";
 
 export type Role = "SELLER" | "BUYER";
 
@@ -32,12 +32,22 @@ export interface TransactionItem {
   remainingStockConfirmed: boolean;
 }
 
+export interface MonthlyInvoice {
+  month: number;
+  dueDate: string;
+  paymentStatus: PaymentStatus;
+  paymentMethod?: PaymentMethod;
+  paymentReceiptName?: string;
+}
+
 export interface Transaction {
   id: string;
   hotelId: string;
   hotel: string;
   location: string;
   createdAt: string;
+  contractDurationMonths: number;
+  monthlyInvoices: MonthlyInvoice[];
   status: TransactionStatus;
   deliveryStatus: DeliveryStatus;
   items: TransactionItem[];

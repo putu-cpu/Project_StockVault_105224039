@@ -13,7 +13,7 @@ interface ProductCatalogModalProps {
   catalog: Item[];
   onClose: () => void;
   onSaveCatalog?: (items: Item[]) => void;
-  onSubmitOrder?: (items: TransactionItem[], hotelId?: string) => void;
+  onSubmitOrder?: (items: TransactionItem[], hotelId?: string, durationMonths?: number) => void;
 }
 
 export function ProductCatalogModal({ open, mode, catalog, onClose, onSaveCatalog, onSubmitOrder }: ProductCatalogModalProps) {
@@ -26,6 +26,7 @@ export function ProductCatalogModal({ open, mode, catalog, onClose, onSaveCatalo
   const [size, setSize] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [hotelId, setHotelId] = useState(hotelPartners[0]?.id ?? "");
+  const [durationMonths, setDurationMonths] = useState(1);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -92,7 +93,7 @@ export function ProductCatalogModal({ open, mode, catalog, onClose, onSaveCatalo
       setError("Choose a hotel partner for this delivery.");
       return;
     }
-    onSubmitOrder?.(orderItems, mode === "delivery" ? hotelId : undefined);
+    onSubmitOrder?.(orderItems, mode === "delivery" ? hotelId : undefined, durationMonths);
     onClose();
   }
 
@@ -125,8 +126,8 @@ export function ProductCatalogModal({ open, mode, catalog, onClose, onSaveCatalo
   }
 
   return createPortal((
-    <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <div ref={dialogRef} className="modal-panel max-w-3xl product-catalog-modal" role="dialog" aria-modal="true" aria-labelledby="catalog-modal-title" aria-describedby="catalog-modal-description">
+    <div className="modal-backdrop bg-slate-900/40 backdrop-blur-sm" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <div ref={dialogRef} className="modal-panel max-h-[85vh] max-w-3xl overflow-y-auto product-catalog-modal" role="dialog" aria-modal="true" aria-labelledby="catalog-modal-title" aria-describedby="catalog-modal-description">
         <form className="product-modal-form" onSubmit={submit}>
           <header className="product-modal-header">
             <div className="min-w-0"><p className="eyebrow">{isManage ? "SELLER / MASTER STOCK" : isDelivery ? "SELLER / DELIVERY CREATION" : "HOTEL / ORDER REQUEST"}</p><h2 id="catalog-modal-title" className="mt-2 text-xl font-semibold tracking-tight text-stone-950">{title}</h2><p id="catalog-modal-description" className="mt-2 text-sm leading-6 text-stone-600">{isManage ? "Update the shared product names, categories and IDR prices used for new hotel orders." : isDelivery ? "Choose a partner and quantities from the live CV. Alam Zempol master catalog." : "Select products from the live Alam Zempol catalog. The supplier will prepare the requested quantities for delivery."}</p></div>
@@ -161,7 +162,10 @@ export function ProductCatalogModal({ open, mode, catalog, onClose, onSaveCatalo
             </>
           ) : (
             <>
-              {isDelivery && <div className="mb-4"><label className="form-label" htmlFor="delivery-hotel">Hotel partner</label><select className="form-control" id="delivery-hotel" value={hotelId} onChange={(event) => setHotelId(event.target.value)}>{hotelPartners.map((partner) => <option key={partner.id} value={partner.id}>{partner.name}</option>)}</select></div>}
+              <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                {isDelivery && <div><label className="form-label" htmlFor="delivery-hotel">Hotel partner</label><select className="form-control" id="delivery-hotel" value={hotelId} onChange={(event) => setHotelId(event.target.value)}>{hotelPartners.map((partner) => <option key={partner.id} value={partner.id}>{partner.name}</option>)}</select></div>}
+                <div><label className="form-label" htmlFor="contract-duration">Contract Duration (Months)</label><select className="form-control" id="contract-duration" value={durationMonths} onChange={(event) => setDurationMonths(Number(event.target.value))}><option value={1}>1 Month</option><option value={2}>2 Months</option><option value={6}>6 Months</option><option value={12}>12 Months</option></select></div>
+              </div>
               <div className="catalog-select-list">
                 {catalog.map((item) => (
                   <div className={`catalog-select-row ${selected[item.id] ? "catalog-select-row-active" : ""}`} key={item.id}>
