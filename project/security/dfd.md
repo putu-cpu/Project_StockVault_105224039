@@ -2,6 +2,7 @@
 
 Diagram aliran data menunjukkan batas kepercayaan (*Trust Boundaries*) dan elemen pemrosesan dalam aplikasi StokVault.
 
+```text
 +--------------------------------------------------------------------------------+
 | TRUST BOUNDARY 1: USER / EXTERNAL ENVIRONMENT                                  |
 |                                                                                |
@@ -25,6 +26,7 @@ Diagram aliran data menunjukkan batas kepercayaan (*Trust Boundaries*) dan eleme
 |  +------------------------------------------------------------------------+   |
 |                                                                                |
 +--------------------------------------------------------------------------------+
+```
 
 ### **Tabel ID Elemen DFD:**
 * **Aktor External:** `ACT-01` (CV. Alam Zempol / Seller), `ACT-02` (Staf Hotel / Buyer).
