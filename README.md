@@ -64,44 +64,39 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 ## 📁 Struktur Folder Proyek
 
 ```text
-project/
-├── docs/                      # Dokumentasi & Bukti Pengujian
-│   ├── 360 px.png             # Bukti Tampilan Mobile
-│   ├── 768 px.png             # Bukti Tampilan Tablet
-│   ├── 1280 px.png            # Bukti Tampilan Desktop
-│   ├── lighthouse.png         # Bukti Skor Aksesibilitas Lighthouse (≥ 85)
-│   └── AI_LOG.md              # Log penggunaan kecerdasan buatan
-├── public/                    # Aset Publik
-├── src/                       # Kode Sumber Utama
-│   ├── components/            # Komponen Antarmuka Reusable
-│   │   ├── Sidebar.tsx        # Navigasi utama dengan Logo StokVault
-│   │   ├── StatusBadge.tsx    # Indikator status (LOCKED, PENDING, PAID, TERMINATED)
-│   │   ├── StatCard.tsx       # Ringkasan metrik dashboard
-│   │   ├── DataTable.tsx      # Tabel data terstruktur
-│   │   ├── ModalConfirmation.tsx # Dialog konfirmasi penguncian/penghapusan data
-│   │   ├── PaymentModal.tsx   # Modal Payment Gateway
-│   │   ├── ProductCatalogModal.tsx # Modal pilihan katalog master CV. Alam Zempol
-│   │   └── EditRequestModal.tsx # Modal persetujuan izin akses edit
-│   ├── data/                  # Mock Data
-│   │   └── mockData.ts        # Katalog Master CV. Alam Zempol (0 transaksi awal)
-│   ├── hooks/                 # Custom React Hooks
-│   ├── pages/                 # Halaman Aplikasi
-│   │   ├── LoginPage.tsx      # Single Login Card
-│   │   ├── SellerDashboardPage.tsx # Dashboard CV. Alam Zempol
-│   │   └── HotelDashboardPage.tsx  # Workspace Khusus Hotel
-│   ├── types/                 # Definisi Tipe TypeScript
-│   │   └── index.ts
-│   ├── utils/                 # Utilities & Fungsi Kriptografi
-│   │   ├── crypto.ts          # Fungsi pembuat SHA-256 Hash & Verifikasi
-│   │   └── crypto.test.ts     # 4 Skenario Unit Testing Kriptografi
-│   ├── App.tsx                # Entry Root Component & State Routing
-│   ├── main.tsx               # Entry Point Aplikasi
-│   └── styles.css             # Custom CSS Directives
-├── index.html
-├── package.json
-├── tsconfig.json
-├── vite.config.ts             # Konfigurasi Server Port 3000
-└── README.md
+Project_Pemweb/
+└── project/
+    ├── dist/                       # Output Build Produksi
+    ├── docs/                       # Dokumentasi & Bukti Pengujian UI/UX
+    │   ├── 360 px.png              # Bukti Tampilan Mobile
+    │   ├── 768 px.png              # Bukti Tampilan Tablet
+    │   ├── 1280 px.png             # Bukti Tampilan Desktop
+    │   ├── AI_LOG.md               # Log Penggunaan AI (Gemini/ChatGPT)
+    │   └── lighthouse.png          # Bukti Skor Aksesibilitas Lighthouse (≥ 85)
+    ├── node_modules/               # Dependensi Project
+    ├── public/                     # Aset Publik
+    ├── security/                   # Berkas Analisis Keamanan Siber (Penanda sec-0.1)
+    │   ├── asset-inventory.md      # Inventarisasi Aset Sistem & Data
+    │   ├── dfd.md                  # Data Flow Diagram Level 1 (2 Trust Boundaries)
+    │   ├── risk-register.md        # Matriks & Rencana Kontrol 5 Risiko Prioritas
+    │   └── threat-model.md         # 10 Ancaman STRIDE
+    ├── src/                        # Kode Sumber Utama
+    │   ├── components/             # Komponen Reusable (Sidebar, Modals, StatusBadge, dll.)
+    │   ├── data/                   # Mock Data (mockData.ts — Master Katalog CV. Alam Zempol)
+    │   ├── hooks/                  # Custom React Hooks
+    │   ├── pages/                  # Halaman Utama (LoginPage, SellerDashboardPage, HotelDashboardPage)
+    │   ├── types/                  # Interface & Tipe TypeScript (index.ts)
+    │   └── utils/                  # Utilitas Kriptografi & Unit Test
+    │       ├── crypto.ts           # Implementasi Hash SHA-256
+    │       └── crypto.test.ts      # 4 Skenario Automated Testing (Vitest)
+    ├── App.tsx                     # Component Root & Routing
+    ├── main.tsx                    # React Entry Point
+    ├── styles.css                  # Custom Tailwind & CSS Directives
+    ├── index.html
+    ├── package.json
+    ├── tsconfig.json
+    ├── vite.config.ts              # Konfigurasi Server Port 3000
+    └── README.md
 
 ```
 
