@@ -125,9 +125,9 @@ Dokumen ini menjelaskan rancangan, kebutuhan, implementasi, dan pengujian kompon
 
 ## 📌 1. Deskripsi Ringkas Produk
 
-**StokVault** adalah platform *consignment ledger* B2B untuk **CV. Alam Zempol** (pemasok produk perawatan tubuh organik) dan hotel mitranya (seperti Grand Hyatt Bali dan Ayana Resort Bali)[cite: 1]. 
+**StokVault** adalah platform *consignment ledger* B2B untuk **CV. Alam Zempol** (pemasok produk perawatan tubuh organik) dan hotel mitranya (seperti Grand Hyatt Bali dan Ayana Resort Bali). 
 
-Aplikasi ini memfasilitasi pencatatan penerimaan barang, *stock opname*, dan pembayaran[cite: 1]. Untuk mencegah perselisihan tagihan dan manipulasi data di kemudian hari, StokVault menerapkan **Immutable Data Locking** berbasis stempel digital kriptografi (*SHA-256 Hash Signature*) saat pihak hotel menyetujui penerimaan barang fisik[cite: 1].
+Aplikasi ini memfasilitasi pencatatan penerimaan barang, *stock opname*, dan pembayaran[cite: 1]. Untuk mencegah perselisihan tagihan dan manipulasi data di kemudian hari, StokVault menerapkan **Immutable Data Locking** berbasis stempel digital kriptografi (*SHA-256 Hash Signature*) saat pihak hotel menyetujui penerimaan barang fisik.
 
 ---
 
@@ -135,9 +135,9 @@ Aplikasi ini memfasilitasi pencatatan penerimaan barang, *stock opname*, dan pem
 
 | Data / Fungsi Produk | Tujuan Keamanan | Prioritas |
 | :--- | :--- | :--- |
-| **Penerimaan Stok (*Locked Record*)** | **Integrity (Integritas):** Memastikan rincian barang dan jumlah yang disetujui tidak dapat diubah secara ilegal oleh pihak manapun[cite: 1]. | High |
-| **Bukti Digital Persetujuan Hotel** | **Non-Repudiation (Nirpenyangkalan):** Membuktikan secara digital bahwa staf hotel telah memverifikasi dan menyetujui fisik barang pada waktu tertentu[cite: 1]. | High |
-| **Integritas Tagihan (*Invoicing Data*)** | **Authenticity (Keotentikan):** Memastikan kalkulasi total tagihan berasal dari data sisa stok yang sah dan terverifikasi[cite: 1]. | Medium |
+| **Penerimaan Stok (*Locked Record*)** | **Integrity (Integritas):** Memastikan rincian barang dan jumlah yang disetujui tidak dapat diubah secara ilegal oleh pihak manapun. | High |
+| **Bukti Digital Persetujuan Hotel** | **Non-Repudiation (Nirpenyangkalan):** Membuktikan secara digital bahwa staf hotel telah memverifikasi dan menyetujui fisik barang pada waktu tertentu. | High |
+| **Integritas Tagihan (*Invoicing Data*)** | **Authenticity (Keotentikan):** Memastikan kalkulasi total tagihan berasal dari data sisa stok yang sah dan terverifikasi. | Medium |
 
 ---
 
