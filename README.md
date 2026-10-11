@@ -2,7 +2,7 @@
 
 **StokVault** adalah platform *consignment ledger* B2B yang dirancang khusus untuk memodernisasi dan mengotomatisasi alur kerja konsinyasi antara **CV. Alam Zempol** (pemasok produk perawatan tubuh organik dan *amenities* hotel) dengan hotel-hotel mitranya (seperti Grand Hyatt Bali dan Ayana Resort Bali).
 
-Sistem ini menyelesaikan masalah penundaan pembayaran (*payment delay*) melalui mekanisme **Immutable Data Locking** (Penguncian Data Permanen) yang dilengkapi stempel digital Kriptografi **SHA-256**, kalkulasi sisa stok (*Stock Opname*) secara otomatis, serta *Real-Time Invoicing*.
+Sistem ini menyelesaikan masalah penundaan pembayaran (*payment delay*) melalui mekanisme **Immutable Data Locking** (Penguncian Data Permanen) yang dilengkapi stempel digital Kriptografi **SHA-256**, kalkulasi sisa stok (*Stock Opname*) secara otomatis, *Real-Time Invoicing*, serta alur kerja durasi kontrak bulanan.
 
 ---
 
@@ -13,8 +13,9 @@ Sistem ini menyelesaikan masalah penundaan pembayaran (*payment delay*) melalui 
 4. [Struktur Folder Proyek](#-struktur-folder-proyek)
 5. [Petunjuk Instalasi & Jalankan Proyek](#-petunjuk-instalasi--jalankan-proyek)
 6. [Pengujian Akun Demo](#-pengujian-akun-demo)
-7. [Komponen Kriptografi & Testing](#-komponen-kriptografi--testing)
-8. [Kepatuhan Aksesibilitas & Responsivitas](#-kepatuhan-aksesibilitas--responsivitas)
+7. [Komponen Kriptografi & Automated Testing (v0.1)](#-komponen-kriptografi--automated-testing-v01)
+8. [Dokumentasi Keamanan Siber (sec-0.1)](#-dokumentasi-keamanan-siber-sec-01)
+9. [Kepatuhan Aksesibilitas & Responsivitas](#-kepatuhan-aksesibilitas--responsivitas)
 
 ---
 
@@ -27,8 +28,8 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 * **Proses Stock Opname Lambat:** Perhitungan tagihan bulanan dilakukan secara manual yang rentan terhadap kesalahan (*human error*).
 
 ### **Solusi StokVault**
-* **Penguncian Data Berbasis Kriptografi:** Staf hotel mengonfirmasi jumlah barang fisik riil dan menekan tombol **"Approve & Permanently Lock Data"**, membekukan data penerimaan dan menerbitkan *Signature Hash SHA-256*.
-* **Otomatisasi Tagihan (Real-Time Invoicing):** Tagihan dihitung otomatis berdasarkan rumus:
+* **Penguncian Data Berbasis Kriptografi:** Staf hotel mengonfirmasi jumlah barang fisik riil dan menekan tombol **"Accept Delivery & Lock Stock"**, membekukan data penerimaan dan menerbitkan *Signature Hash SHA-256*.
+* **Otomatisasi Tagihan Bulanan (Recurring Invoicing):** Pemilihan durasi kontrak (misal: 2 Bulan) secara otomatis menggenerasi daftar tagihan bulanan secara teratur. Tagihan dihitung otomatis berdasarkan rumus:
   $$\text{Total Tagihan} = (\text{Barang Diterima} - \text{Sisa Stok}) \times \text{Harga Satuan}$$
 * **Ruang Kerja Terisolasi (Folder Isolation):** Mengisolasi data dan transaksi per hotel mitra tanpa risiko kebocoran data antar hotel.
 * **Fresh Start (Tanpa Data Dummy Awal):** Aplikasi dimulai dari kondisi **kosong (*empty state*)** sehingga seluruh data yang muncul murni berasal dari input pengguna secara langsung.
@@ -39,22 +40,22 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 
 | Fitur | Deskripsi | Peran (Role) |
 | :--- | :--- | :--- |
-| **Master Catalog Management** | Menambah, memperbarui, dan mengelola katalog produk master CV. Alam Zempol. | Seller |
-| **Hotel Workspace Isolation** | Folder terpisah khusus tiap hotel mitra (*Grand Hyatt Bali*, *Ayana Resort Bali*). | Seller & Hotel |
-| **Immutable Locking & Hash SHA-256** | Mengunci data penerimaan barang secara permanen dan menerbitkan bukti digital. | Hotel (Buyer) |
+| **Master Catalog Management** | Kelola katalog produk master CV. Alam Zempol (Nama, Kategori, Ukuran, Harga IDR). | Seller |
+| **Simplified Delivery Tracker** | Pembaruan status pengiriman secara manual (`PREPARING` $\rightarrow$ `IN_TRANSIT`) tanpa tombol *Create Delivery* kaku. | Seller |
+| **Arrival & Immutable Locking** | Konfirmasi barang tiba (`ARRIVED`) dan penguncian data permanen disertai stempel SHA-256. | Hotel (Buyer) |
+| **Contract Duration & Auto-Billing** | Penentuan durasi kontrak (misal: 1, 2, 6, 12 bulan) yang otomatis menghasilkan jadwal tagihan bulanan. | Hotel (Buyer) |
+| **Contract Termination Approval** | Pengajuan pembatalan/pemutusan kontrak oleh hotel memerlukan persetujuan (*Approval*) dari Seller sebelum berstatus `TERMINATED`. | Hotel & Seller |
 | **Edit Access Approval Flow** | Alur persetujuan saat Seller mengajukan pembukaan akses edit pada data yang terlanjur terkunci. | Seller & Hotel |
-| **Consolidated "Locked Stock" View** | Ringkasan terpusat seluruh daftar stok produk yang telah dikunci dalam satu halaman. | Seller & Hotel |
-| **Real-Time Stock Opname & Invoicing** | Pengisian sisa stok (*Remaining Stock*) yang seketika mengaktifkan tombol pembayaran *Pay Now*. | Hotel (Buyer) |
-| **Interactive Payment Gateway** | Pilihan metode pembayaran interaktif (Virtual Account BCA/Mandiri, QRIS, Transfer Bank) yang otomatis memperbarui status menjadi **PAID**. | Hotel (Buyer) |
-| **Terminated Contract & Delete Action** | Menandai kontrak yang berakhir (*Terminated*) dan opsi tombol **Delete** untuk menghapus permanen catatan dari workspace. | Seller & Hotel |
+| **Centralized Hotel Dashboard** | Dashboard hotel yang di-redesain rapi dengan tab *Locked Items*, *Monthly Billing*, *Pending Verification*, dan *Terminated Contracts*. | Hotel (Buyer) |
+| **Interactive Payment Gateway** | Pilihan pembayaran interaktif (Virtual Account BCA/Mandiri, QRIS, Transfer Bank) yang otomatis memperbarui status menjadi **PAID**. | Hotel (Buyer) |
 
 ---
 
 ## 🛠️ Arsitektur & Teknologi Stack
 
 * **Frontend Framework:** React 18 dengan TypeScript
-* **Build Tool & Server:** Vite (dikonfigurasi pada port `localhost:3000`)
-* **Styling & UI:** Tailwind CSS & Custom Styles (`src/styles.css`)
+* **Build Tool & Server:** Vite (Port `localhost:3000`)
+* **Styling & UI:** Tailwind CSS & Custom Directives (`src/styles.css`)
 * **Testing Framework:** Vitest
 * **Icons & Assets:** Lucide React Icons
 * **Data Persistence (Mock):** TypeScript Data Module (`src/data/mockData.ts`)
@@ -71,25 +72,25 @@ Project_Pemweb/
     │   ├── 360 px.png              # Bukti Tampilan Mobile
     │   ├── 768 px.png              # Bukti Tampilan Tablet
     │   ├── 1280 px.png             # Bukti Tampilan Desktop
-    │   ├── AI_LOG.md               # Log Penggunaan AI (Gemini/ChatGPT)
+    │   ├── AI_LOG.md               # Log Penggunaan AI (Gemini)
     │   └── lighthouse.png          # Bukti Skor Aksesibilitas Lighthouse (≥ 85)
-    ├── node_modules/               # Dependensi Project
+    ├── node_modules/               # Dependensi Proyek
     ├── public/                     # Aset Publik
-    ├── security/                   # Berkas Analisis Keamanan Siber (Penanda sec-0.1)
+    ├── security/                   # Berkas Analisis Keamanan Siber (Tag sec-0.1)
     │   ├── asset-inventory.md      # Inventarisasi Aset Sistem & Data
     │   ├── dfd.md                  # Data Flow Diagram Level 1 (2 Trust Boundaries)
     │   ├── risk-register.md        # Matriks & Rencana Kontrol 5 Risiko Prioritas
     │   └── threat-model.md         # 10 Ancaman STRIDE
     ├── src/                        # Kode Sumber Utama
     │   ├── components/             # Komponen Reusable (Sidebar, Modals, StatusBadge, dll.)
-    │   ├── data/                   # Mock Data (mockData.ts — Master Katalog CV. Alam Zempol)
+    │   ├── data/                   # Mock Data (mockData.ts — Katalog CV. Alam Zempol)
     │   ├── hooks/                  # Custom React Hooks
     │   ├── pages/                  # Halaman Utama (LoginPage, SellerDashboardPage, HotelDashboardPage)
     │   ├── types/                  # Interface & Tipe TypeScript (index.ts)
     │   └── utils/                  # Utilitas Kriptografi & Unit Test
     │       ├── crypto.ts           # Implementasi Hash SHA-256
     │       └── crypto.test.ts      # 4 Skenario Automated Testing (Vitest)
-    ├── App.tsx                     # Component Root & Routing
+    ├── App.tsx                     # Component Root & State Routing
     ├── main.tsx                    # React Entry Point
     ├── styles.css                  # Custom Tailwind & CSS Directives
     ├── index.html
@@ -99,6 +100,61 @@ Project_Pemweb/
     └── README.md
 
 ```
+# 📘 Petunjuk Instalasi & Jalankan Proyek
+
+## 1. Prasyarat
+
+Pastikan Anda telah menginstal **Node.js** (versi 18 atau lebih baru) dan **npm** di komputer Anda.
+
+---
+
+## 2. Kloning Repositori & Instalasi Dependensi
+
+```bash
+# Masuk ke direktori proyek
+cd project
+
+# Instal seluruh dependensi
+npm install
+```
+
+---
+
+## 3. Jalankan Pengujian Kriptografi Otomatis
+
+```bash
+npm run test
+```
+
+---
+
+## 4. Jalankan Server Lokal
+
+```bash
+npm run dev
+```
+
+Buka peramban (*browser*) Anda dan akses:
+
+👉 [http://localhost:3000](http://localhost:3000)
+
+---
+
+## 🔑 Pengujian Akun Demo
+
+Aplikasi menggunakan **Single Login Card** dengan kredensial bantuan demo:
+
+1. **Seller Workspace (CV. Alam Zempol)**
+   - **Email:** `seller@alamzempol.com`
+   - **Password:** *(karakter bebas)*
+
+2. **Hotel Partner 1 (Grand Hyatt Bali)**
+   - **Email:** `hotel@grandhyatt.com`
+   - **Password:** *(karakter bebas)*
+
+3. **Hotel Partner 2 (Ayana Resort Bali)**
+   - **Email:** `hotel@ayana.com`
+   - **Password:** *(karakter bebas)*
 
 
 ## Run locally
