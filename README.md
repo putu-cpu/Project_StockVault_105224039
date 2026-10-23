@@ -65,39 +65,96 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 ## 📁 Struktur Folder Proyek
 
 ```text
+
 Project_Pemweb/
+├── .git/
+├── README.md
 └── project/
-    ├── dist/                       # Output Build Produksi
-    ├── docs/                       # Dokumentasi & Bukti Pengujian UI/UX
-    │   ├── 360 px.png              # Bukti Tampilan Mobile
-    │   ├── 768 px.png              # Bukti Tampilan Tablet
-    │   ├── 1280 px.png             # Bukti Tampilan Desktop
-    │   ├── AI_LOG.md               # Log Penggunaan AI (Gemini)
-    │   └── lighthouse.png          # Bukti Skor Aksesibilitas Lighthouse (≥ 85)
-    ├── node_modules/               # Dependensi Proyek
-    ├── public/                     # Aset Publik
-    ├── security/                   # Berkas Analisis Keamanan Siber (Tag sec-0.1)
-    │   ├── asset-inventory.md      # Inventarisasi Aset Sistem & Data
-    │   ├── dfd.md                  # Data Flow Diagram Level 1 (2 Trust Boundaries)
-    │   ├── risk-register.md        # Matriks & Rencana Kontrol 5 Risiko Prioritas
-    │   └── threat-model.md         # 10 Ancaman STRIDE
-    ├── src/                        # Kode Sumber Utama
-    │   ├── components/             # Komponen Reusable (Sidebar, Modals, StatusBadge, dll.)
-    │   ├── data/                   # Mock Data (mockData.ts — Katalog CV. Alam Zempol)
-    │   ├── hooks/                  # Custom React Hooks
-    │   ├── pages/                  # Halaman Utama (LoginPage, SellerDashboardPage, HotelDashboardPage)
-    │   ├── types/                  # Interface & Tipe TypeScript (index.ts)
-    │   └── utils/                  # Utilitas Kriptografi & Unit Test
-    │       ├── crypto.ts           # Implementasi Hash SHA-256
-    │       └── crypto.test.ts      # 4 Skenario Automated Testing (Vitest)
-    ├── App.tsx                     # Component Root & State Routing
-    ├── main.tsx                    # React Entry Point
-    ├── styles.css                  # Custom Tailwind & CSS Directives
-    ├── index.html
+    ├── docs/
+    │   ├── 360 px.png
+    │   ├── 768 px.png
+    │   ├── 1280 px.png
+    │   ├── lighthouse.png
+    │   └── AI_LOG.md
+    │
+    ├── public/
+    │   ├── file.svg
+    │   ├── globe.svg
+    │   ├── next.svg
+    │   ├── vercel.svg
+    │   └── window.svg
+    │
+    ├── security/
+    │   ├── asset-inventory.md
+    │   ├── dfd.md
+    │   ├── risk-register.md
+    │   └── threat-model.md
+    │
+    ├── src/
+    │   ├── app/
+    │   │   ├── favicon.ico
+    │   │   ├── globals.css
+    │   │   ├── layout.tsx
+    │   │   ├── page.tsx
+    │   │   │
+    │   │   ├── hotel/
+    │   │   │   ├── layout.tsx
+    │   │   │   ├── page.tsx
+    │   │   │   ├── template.tsx
+    │   │   │   └── [id]/
+    │   │   │       ├── page.tsx
+    │   │   │       └── not-found.tsx
+    │   │   │
+    │   │   └── transactions/
+    │   │       └── [id]/
+    │   │           └── page.tsx
+    │   │
+    │   ├── components/
+    │   │   ├── AlertBanner.tsx
+    │   │   ├── DataTable.tsx
+    │   │   ├── InvoiceDetailModal.tsx
+    │   │   ├── KolomCatatan.tsx
+    │   │   ├── ModalConfirmation.tsx
+    │   │   ├── PaymentModal.tsx
+    │   │   ├── PaymentSelector.tsx
+    │   │   ├── ProductCatalogModal.tsx
+    │   │   ├── Sidebar.tsx
+    │   │   ├── StatCard.tsx
+    │   │   ├── StatusBadge.tsx
+    │   │   └── TransactionEditModal.tsx
+    │   │
+    │   ├── data/
+    │   │   └── mockData.ts
+    │   │
+    │   ├── hooks/
+    │   │   └── useFocusTrap.ts
+    │   │
+    │   ├── types/
+    │   │   └── index.ts
+    │   │
+    │   ├── utils/
+    │   │   ├── crypto.ts
+    │   │   └── crypto.test.ts
+    │   │
+    │   ├── views/
+    │   │   ├── HotelDashboardPage.tsx
+    │   │   ├── LoginPage.tsx
+    │   │   └── SellerDashboardPage.tsx
+    │   │
+    │   ├── App.tsx
+    │   └── styles.css
+    │
+    ├── dist/
+    ├── .gitignore
+    ├── AGENTS.md
+    ├── next.config.ts
+    ├── next-env.d.ts
     ├── package.json
+    ├── package-lock.json
+    ├── postcss.config.mjs
     ├── tsconfig.json
-    ├── vite.config.ts              # Konfigurasi Server Port 3000
-    └── README.md
+    └── tsconfig.tsbuildinfo
+
 
 ```
 # 📘 Petunjuk Instalasi & Jalankan Proyek
