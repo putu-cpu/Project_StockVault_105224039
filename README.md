@@ -52,9 +52,9 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 
 ## 🛠️ Arsitektur & Teknologi Stack
 
-* **Frontend Framework:** React 18 dengan TypeScript
-* **Build Tool & Server:** Vite (dikonfigurasi pada port `localhost:3000`)
-* **Styling & UI:** Tailwind CSS & Custom Styles (`src/styles.css`)
+* **Frontend Framework:** Next.js (App Router) & React 19 dengan TypeScript
+* **Build Tool & Server:** Next.js (dikonfigurasi pada port `localhost:3000`)
+* **Styling & UI:** Tailwind CSS v4 & Custom Styles (`src/styles.css` / PostCSS)
 * **Testing Framework:** Vitest
 * **Icons & Assets:** Lucide React Icons
 * **Data Persistence (Mock):** TypeScript Data Module (`src/data/mockData.ts`)
@@ -66,7 +66,7 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 ```text
 Project_Pemweb/
 └── project/
-    ├── dist/                       # Output Build Produksi
+    ├── .next/                      # Output Build Next.js
     ├── docs/                       # Dokumentasi & Bukti Pengujian UI/UX
     │   ├── 360 px.png              # Bukti Tampilan Mobile
     │   ├── 768 px.png              # Bukti Tampilan Tablet
@@ -81,23 +81,26 @@ Project_Pemweb/
     │   ├── risk-register.md        # Matriks & Rencana Kontrol 5 Risiko Prioritas
     │   └── threat-model.md         # 10 Ancaman STRIDE
     ├── src/                        # Kode Sumber Utama
+    │   ├── app/                    # Next.js App Router
+    │   │   ├── layout.tsx          # Root Server Component & Global Metadata
+    │   │   ├── page.tsx            # Static Route (/)
+    │   │   ├── globals.css         # Styling Directive
+    │   │   ├── hotel/[id]/         # Dynamic Route (/hotel/[id]) & generateStaticParams
+    │   │   └── transactions/[id]/  # Dynamic Route (/transactions/[id]) Audit Certificate
     │   ├── components/             # Komponen Reusable (Sidebar, Modals, StatusBadge, dll.)
     │   ├── data/                   # Mock Data (mockData.ts — Master Katalog CV. Alam Zempol)
     │   ├── hooks/                  # Custom React Hooks
-    │   ├── pages/                  # Halaman Utama (LoginPage, SellerDashboardPage, HotelDashboardPage)
+    │   ├── views/                  # Tampilan Halaman Utama (LoginPage, SellerDashboardPage, HotelDashboardPage)
     │   ├── types/                  # Interface & Tipe TypeScript (index.ts)
     │   └── utils/                  # Utilitas Kriptografi & Unit Test
     │       ├── crypto.ts           # Implementasi Hash SHA-256
     │       └── crypto.test.ts      # 4 Skenario Automated Testing (Vitest)
-    ├── App.tsx                     # Component Root & Routing
-    ├── main.tsx                    # React Entry Point
-    ├── styles.css                  # Custom Tailwind & CSS Directives
-    ├── index.html
+    │   ├── App.tsx                 # Root Client Component & Business State Logic
+    │   └── styles.css              # Custom Tailwind & CSS Directives
+    ├── next.config.ts              # Konfigurasi Next.js
+    ├── postcss.config.mjs          # Konfigurasi PostCSS Tailwind CSS
     ├── package.json
-    ├── tsconfig.json
-    ├── vite.config.ts              # Konfigurasi Server Port 3000
-    └── README.md
-
+    └── tsconfig.json
 ```
 
 
@@ -110,7 +113,7 @@ npm install
 npm run dev
 ```
 
-Vite starts on port 3000 and automatically tries the next available port if it is occupied. Run `npm run check` for TypeScript validation and `npm run build` for a production build.
+Next.js starts on port 3000 (`next dev`). Run `npm run check` for TypeScript validation, `npm test` for Vitest suite, and `npm run build` for a production build.
 
 ## Prototype boundaries
 

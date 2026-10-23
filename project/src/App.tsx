@@ -1,10 +1,12 @@
+"use client";
+
 import { useState } from "react";
 import { Menu } from "lucide-react";
 import { catalog as initialCatalog, hotelPartners } from "./data/mockData";
 import { Sidebar, type SidebarWorkspace } from "./components/Sidebar";
-import { HotelDashboardPage } from "./pages/HotelDashboardPage";
-import { LoginPage } from "./pages/LoginPage";
-import { SellerDashboardPage } from "./pages/SellerDashboardPage";
+import { HotelDashboardPage } from "./views/HotelDashboardPage";
+import { LoginPage } from "./views/LoginPage";
+import { SellerDashboardPage } from "./views/SellerDashboardPage";
 import { generateDataHash } from "./utils/crypto";
 import type { DeliveryStatus, Item, PaymentMethod, Transaction, TransactionItem, User } from "./types";
 

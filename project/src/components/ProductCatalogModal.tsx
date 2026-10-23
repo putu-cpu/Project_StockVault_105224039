@@ -42,6 +42,12 @@ export function ProductCatalogModal({ open, mode, catalog, onClose, onSaveCatalo
     setError("");
   }, [open, catalog]);
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
@@ -51,7 +57,7 @@ export function ProductCatalogModal({ open, mode, catalog, onClose, onSaveCatalo
     };
   }, [open]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
