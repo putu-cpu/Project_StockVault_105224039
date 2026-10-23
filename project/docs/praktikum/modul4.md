@@ -1,9 +1,9 @@
 # Dokumen Teknis Modul 4: Next.js App Router
  
 - **Nama/NIM:** 105224039
-- **Repositori:** <tautan repositori GitHub>
+- **Repositori:** https://github.com/putu-cpu/Project_StockVault_105224039/tree/modul4
 - **Versi Next.js:** Next.js v16.4.2
-- **Mode Cache Components (aktif/tidak):** 
+- **Mode Cache Components (aktif/tidak):** aktif 
 
 ## 1. Peta Rute
 
