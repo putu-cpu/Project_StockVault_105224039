@@ -57,7 +57,8 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 * **Styling & UI:** Tailwind CSS v4 & Custom Styles (`src/styles.css` / PostCSS)
 * **Testing Framework:** Vitest
 * **Icons & Assets:** Lucide React Icons
-* **Data Persistence (Mock):** TypeScript Data Module (`src/data/mockData.ts`)
+* **Database:** SQLite with Prisma ORM 7 (`project/prisma/schema.prisma`)
+* **Prototype data:** Dashboard still uses the TypeScript data module (`src/data/mockData.ts`)
 
 ---
 
@@ -110,14 +111,18 @@ Use Node.js 20 or newer.
 
 ```bash
 npm install
+npm run db:migrate -- --name init
+npm run db:generate
 npm run dev
 ```
 
-Next.js starts on port 3000 (`next dev`). Run `npm run check` for TypeScript validation, `npm test` for Vitest suite, and `npm run build` for a production build.
+Run these commands from the `project/` directory. Next.js starts on port 3000 (`next dev`). Run `npm run check` for TypeScript validation, `npm test` for Vitest suite, and `npm run build` for a production build. Use `npm run db:studio` to inspect the local SQLite database.
 
-## Prototype boundaries
+## Database and prototype boundaries
 
-The catalog, partner directory, and demo identities are local TypeScript data; there are no pre-populated transactions. Changes exist in browser memory and reset on refresh. Login is a routing demo, not authentication, and client-side filtering is not a security boundary. SHA-256 is a browser-generated snapshot fingerprint, not a trusted digital signature. Bank methods and payment confirmation are simulations; no funds move and transfer slips are not uploaded. Production requires server-enforced hotel isolation, authentication, durable append-only records, trusted signing, persistent storage, and a payment provider.
+The Prisma schema and SQLite migrations define persistent storage for suppliers, hotels, users, products, transactions, stock records, invoices, payments, and audit events. The database starts empty. The catalog, partner directory, demo identities, and dashboard state still come from local TypeScript data; UI changes reset on refresh and are not written to SQLite yet. Login is a routing demo, not authentication, and client-side filtering is not a security boundary. SHA-256 is a browser-generated snapshot fingerprint, not a trusted digital signature. Bank methods and payment confirmation are simulations; no funds move and transfer slips are not uploaded. Production use requires server-side database operations, real authentication, tenant authorization, durable audit controls, trusted signing, secure receipt storage, and a payment provider.
+
+See [the database design](./project/docs/rancangan-data.md) for the entity diagram, keys, constraints, delete policy, and setup instructions.
 
 
 # Dokumentasi Kebutuhan & Komponen Kriptografi — StokVault
@@ -163,5 +168,4 @@ Komponen kriptografi bertindak sebagai **Digital Stamper** saat transaksi bersta
 * **Sumber Keacakan (*Randomness Source*):** `crypto.getRandomValues()` (CSPRNG bawaan peramban web) digunakan saat membutuhkan generasi *Salt/Nonce* acak.
 
 ---
-
 

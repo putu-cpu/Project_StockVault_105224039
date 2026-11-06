@@ -8,6 +8,7 @@ import { HotelDashboardPage } from "./views/HotelDashboardPage";
 import { LoginPage } from "./views/LoginPage";
 import { SellerDashboardPage } from "./views/SellerDashboardPage";
 import { generateDataHash } from "./utils/crypto";
+import { logoutAction } from "./actions/auth";
 import type { DeliveryStatus, Item, PaymentMethod, Transaction, TransactionItem, User } from "./types";
 
 async function signDeliverySnapshot(transaction: Transaction, items: TransactionItem[]) {
@@ -205,7 +206,7 @@ export default function App() {
 
   return (
     <div className="app-frame">
-      <Sidebar user={user} workspace={workspace} pendingCount={pendingOrders} mobileOpen={mobileMenuOpen} onNavigate={navigate} onSignOut={() => { setUser(null); setWorkspace("overview"); setMobileMenuOpen(false); }} />
+      <Sidebar user={user} workspace={workspace} pendingCount={pendingOrders} mobileOpen={mobileMenuOpen} onNavigate={navigate} onSignOut={async () => { try { await logoutAction(); } catch {} setUser(null); setWorkspace("overview"); setMobileMenuOpen(false); }} />
 
       {mobileMenuOpen && <button type="button" className="mobile-scrim" aria-label="Close navigation" onClick={() => setMobileMenuOpen(false)} />}
 
