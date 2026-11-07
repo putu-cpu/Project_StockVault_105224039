@@ -2,7 +2,7 @@
 
 **StokVault** adalah platform *consignment ledger* B2B yang dirancang khusus untuk memodernisasi dan mengotomatisasi alur kerja konsinyasi antara **CV. Alam Zempol** (pemasok produk perawatan tubuh organik dan *amenities* hotel) dengan hotel-hotel mitranya (seperti Grand Hyatt Bali dan Ayana Resort Bali).
 
-Sistem ini menyelesaikan masalah penundaan pembayaran (*payment delay*) melalui mekanisme **Immutable Data Locking** (Penguncian Data Permanen) yang dilengkapi stempel digital Kriptografi **SHA-256**, kalkulasi sisa stok (*Stock Opname*) secara otomatis, serta *Real-Time Invoicing*.
+Sistem ini menyelesaikan masalah penundaan pembayaran (*payment delay*) melalui mekanisme **Immutable Data Locking** (Penguncian Data Permanen) yang dilengkapi stempel digital Kriptografi **SHA-256**, kalkulasi sisa stok (*Stock Opname*) secara otomatis, *Real-Time Invoicing*, serta alur kerja durasi kontrak bulanan.
 
 ---
 
@@ -13,8 +13,9 @@ Sistem ini menyelesaikan masalah penundaan pembayaran (*payment delay*) melalui 
 4. [Struktur Folder Proyek](#-struktur-folder-proyek)
 5. [Petunjuk Instalasi & Jalankan Proyek](#-petunjuk-instalasi--jalankan-proyek)
 6. [Pengujian Akun Demo](#-pengujian-akun-demo)
-7. [Komponen Kriptografi & Testing](#-komponen-kriptografi--testing)
-8. [Kepatuhan Aksesibilitas & Responsivitas](#-kepatuhan-aksesibilitas--responsivitas)
+7. [Komponen Kriptografi & Automated Testing (v0.1)](#-komponen-kriptografi--automated-testing-v01)
+8. [Dokumentasi Keamanan Siber (sec-0.1)](#-dokumentasi-keamanan-siber-sec-01)
+9. [Kepatuhan Aksesibilitas & Responsivitas](#-kepatuhan-aksesibilitas--responsivitas)
 
 ---
 
@@ -27,8 +28,8 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 * **Proses Stock Opname Lambat:** Perhitungan tagihan bulanan dilakukan secara manual yang rentan terhadap kesalahan (*human error*).
 
 ### **Solusi StokVault**
-* **Penguncian Data Berbasis Kriptografi:** Staf hotel mengonfirmasi jumlah barang fisik riil dan menekan tombol **"Approve & Permanently Lock Data"**, membekukan data penerimaan dan menerbitkan *Signature Hash SHA-256*.
-* **Otomatisasi Tagihan (Real-Time Invoicing):** Tagihan dihitung otomatis berdasarkan rumus:
+* **Penguncian Data Berbasis Kriptografi:** Staf hotel mengonfirmasi jumlah barang fisik riil dan menekan tombol **"Accept Delivery & Lock Stock"**, membekukan data penerimaan dan menerbitkan *Signature Hash SHA-256*.
+* **Otomatisasi Tagihan Bulanan (Recurring Invoicing):** Pemilihan durasi kontrak (misal: 2 Bulan) secara otomatis menggenerasi daftar tagihan bulanan secara teratur. Tagihan dihitung otomatis berdasarkan rumus:
   $$\text{Total Tagihan} = (\text{Barang Diterima} - \text{Sisa Stok}) \times \text{Harga Satuan}$$
 * **Ruang Kerja Terisolasi (Folder Isolation):** Mengisolasi data dan transaksi per hotel mitra tanpa risiko kebocoran data antar hotel.
 * **Fresh Start (Tanpa Data Dummy Awal):** Aplikasi dimulai dari kondisi **kosong (*empty state*)** sehingga seluruh data yang muncul murni berasal dari input pengguna secara langsung.
@@ -39,6 +40,7 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 
 | Fitur | Deskripsi | Peran (Role) |
 | :--- | :--- | :--- |
+<<<<<<< HEAD
 | **Master Catalog Management** | Seller dapat menambah, memperbarui, melihat, dan menghapus produk tersimpan; katalog aktif disinkronkan dengan pemilih pesanan hotel. | Seller |
 | **Hotel Workspace Isolation** | Folder terpisah khusus tiap hotel mitra (*Grand Hyatt Bali*, *Ayana Resort Bali*). | Seller & Hotel |
 | **Buyer-Initiated Orders** | Staf hotel memilih produk katalog dan durasi kontrak; sistem membuat slot tagihan bulanan. | Hotel (Buyer) |
@@ -47,14 +49,30 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 | **Real-Time Stock Opname & Invoicing** | Pengisian sisa stok (*Remaining Stock*) yang seketika mengaktifkan tombol pembayaran *Pay Now*. | Hotel (Buyer) |
 | **Interactive Payment Gateway** | Pilihan metode pembayaran interaktif (Virtual Account BCA/Mandiri, QRIS, Transfer Bank) yang otomatis memperbarui status menjadi **PAID**. | Hotel (Buyer) |
 | **Seller-Approved Contract Termination** | Hotel meminta terminasi; Seller menyetujui atau menolak sebelum record dapat dihapus. | Seller & Hotel |
+=======
+| **Master Catalog Management** | Kelola katalog produk master CV. Alam Zempol (Nama, Kategori, Ukuran, Harga IDR). | Seller |
+| **Simplified Delivery Tracker** | Pembaruan status pengiriman secara manual (`PREPARING` $\rightarrow$ `IN_TRANSIT`) tanpa tombol *Create Delivery* kaku. | Seller |
+| **Arrival & Immutable Locking** | Konfirmasi barang tiba (`ARRIVED`) dan penguncian data permanen disertai stempel SHA-256. | Hotel (Buyer) |
+| **Contract Duration & Auto-Billing** | Penentuan durasi kontrak (misal: 1, 2, 6, 12 bulan) yang otomatis menghasilkan jadwal tagihan bulanan. | Hotel (Buyer) |
+| **Contract Termination Approval** | Pengajuan pembatalan/pemutusan kontrak oleh hotel memerlukan persetujuan (*Approval*) dari Seller sebelum berstatus `TERMINATED`. | Hotel & Seller |
+| **Edit Access Approval Flow** | Alur persetujuan saat Seller mengajukan pembukaan akses edit pada data yang terlanjur terkunci. | Seller & Hotel |
+| **Centralized Hotel Dashboard** | Dashboard hotel yang di-redesain rapi dengan tab *Locked Items*, *Monthly Billing*, *Pending Verification*, dan *Terminated Contracts*. | Hotel (Buyer) |
+| **Interactive Payment Gateway** | Pilihan pembayaran interaktif (Virtual Account BCA/Mandiri, QRIS, Transfer Bank) yang otomatis memperbarui status menjadi **PAID**. | Hotel (Buyer) |
+>>>>>>> 3467948cddf64bc8017ec5b9417d8bbd4f8c98ac
 
 ---
 
 ## 🛠️ Arsitektur & Teknologi Stack
 
+<<<<<<< HEAD
 * **Frontend Framework:** Next.js (App Router) & React 19 dengan TypeScript
 * **Build Tool & Server:** Next.js (dikonfigurasi pada port `localhost:3000`)
 * **Styling & UI:** Tailwind CSS v4 & Custom Styles (`src/styles.css` / PostCSS)
+=======
+* **Frontend Framework:** React 18 dengan TypeScript
+* **Build Tool & Server:** Vite (Port `localhost:3000`)
+* **Styling & UI:** Tailwind CSS & Custom Directives (`src/styles.css`)
+>>>>>>> 3467948cddf64bc8017ec5b9417d8bbd4f8c98ac
 * **Testing Framework:** Vitest
 * **Icons & Assets:** Lucide React Icons
 * **Database:** PostgreSQL with Prisma ORM 7 (`project/prisma/schema.prisma`)
@@ -65,8 +83,12 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 ## 📁 Struktur Folder Proyek
 
 ```text
+
 Project_Pemweb/
+├── .git/
+├── README.md
 └── project/
+<<<<<<< HEAD
     ├── .next/                      # Output Build Next.js
     ├── docs/                       # Dokumentasi & Bukti Pengujian UI/UX
     │   ├── 360 px.png              # Bukti Tampilan Mobile
@@ -102,7 +124,150 @@ Project_Pemweb/
     ├── postcss.config.mjs          # Konfigurasi PostCSS Tailwind CSS
     ├── package.json
     └── tsconfig.json
+=======
+    ├── docs/
+    │   ├── 360 px.png
+    │   ├── 768 px.png
+    │   ├── 1280 px.png
+    │   ├── lighthouse.png
+    │   └── AI_LOG.md
+    │
+    ├── public/
+    │   ├── file.svg
+    │   ├── globe.svg
+    │   ├── next.svg
+    │   ├── vercel.svg
+    │   └── window.svg
+    │
+    ├── security/
+    │   ├── asset-inventory.md
+    │   ├── dfd.md
+    │   ├── risk-register.md
+    │   └── threat-model.md
+    │
+    ├── src/
+    │   ├── app/
+    │   │   ├── favicon.ico
+    │   │   ├── globals.css
+    │   │   ├── layout.tsx
+    │   │   ├── page.tsx
+    │   │   │
+    │   │   ├── hotel/
+    │   │   │   ├── layout.tsx
+    │   │   │   ├── page.tsx
+    │   │   │   ├── template.tsx
+    │   │   │   └── [id]/
+    │   │   │       ├── page.tsx
+    │   │   │       └── not-found.tsx
+    │   │   │
+    │   │   └── transactions/
+    │   │       └── [id]/
+    │   │           └── page.tsx
+    │   │
+    │   ├── components/
+    │   │   ├── AlertBanner.tsx
+    │   │   ├── DataTable.tsx
+    │   │   ├── InvoiceDetailModal.tsx
+    │   │   ├── KolomCatatan.tsx
+    │   │   ├── ModalConfirmation.tsx
+    │   │   ├── PaymentModal.tsx
+    │   │   ├── PaymentSelector.tsx
+    │   │   ├── ProductCatalogModal.tsx
+    │   │   ├── Sidebar.tsx
+    │   │   ├── StatCard.tsx
+    │   │   ├── StatusBadge.tsx
+    │   │   └── TransactionEditModal.tsx
+    │   │
+    │   ├── data/
+    │   │   └── mockData.ts
+    │   │
+    │   ├── hooks/
+    │   │   └── useFocusTrap.ts
+    │   │
+    │   ├── types/
+    │   │   └── index.ts
+    │   │
+    │   ├── utils/
+    │   │   ├── crypto.ts
+    │   │   └── crypto.test.ts
+    │   │
+    │   ├── views/
+    │   │   ├── HotelDashboardPage.tsx
+    │   │   ├── LoginPage.tsx
+    │   │   └── SellerDashboardPage.tsx
+    │   │
+    │   ├── App.tsx
+    │   └── styles.css
+    │
+    ├── dist/
+    ├── .gitignore
+    ├── AGENTS.md
+    ├── next.config.ts
+    ├── next-env.d.ts
+    ├── package.json
+    ├── package-lock.json
+    ├── postcss.config.mjs
+    ├── tsconfig.json
+    └── tsconfig.tsbuildinfo
+
+
+>>>>>>> 3467948cddf64bc8017ec5b9417d8bbd4f8c98ac
 ```
+# 📘 Petunjuk Instalasi & Jalankan Proyek
+
+## 1. Prasyarat
+
+Pastikan Anda telah menginstal **Node.js** (versi 18 atau lebih baru) dan **npm** di komputer Anda.
+
+---
+
+## 2. Kloning Repositori & Instalasi Dependensi
+
+```bash
+# Masuk ke direktori proyek
+cd project
+
+# Instal seluruh dependensi
+npm install
+```
+
+---
+
+## 3. Jalankan Pengujian Kriptografi Otomatis
+
+```bash
+npm run test
+```
+
+---
+
+## 4. Jalankan Server Lokal
+
+```bash
+npm run dev
+```
+
+Buka peramban (*browser*) Anda dan akses:
+
+👉 [http://localhost:3000](http://localhost:3000)
+
+---
+
+## 🔑 Pengujian Akun Demo
+
+Aplikasi menggunakan **Single Login Card** dengan kredensial bantuan demo:
+
+1. **Seller Workspace (CV. Alam Zempol)**
+   - **Email:** `seller@alamzempol.com`
+   - **Password:** *(karakter bebas)*
+
+2. **Hotel Partner 1 (Grand Hyatt Bali)**
+   - **Email:** `hotel@grandhyatt.com`
+   - **Password:** *(karakter bebas)*
+
+3. **Hotel Partner 2 (Ayana Resort Bali)**
+   - **Email:** `hotel@ayana.com`
+   - **Password:** *(karakter bebas)*
 
 
 ## Run locally
