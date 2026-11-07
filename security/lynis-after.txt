@@ -1,0 +1,3 @@
+STATUS: NOT RUN
+Reason: This workspace has no authorized Linux VM or Lynis executable.
+Required: Capture the raw post-hardening audit and verify an index of at least 70.

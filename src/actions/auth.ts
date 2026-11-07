@@ -5,7 +5,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { loginSchema } from "../schemas/auth";
 import { demoUsers } from "../data/mockData";
+import { demoPasswordHashes } from "../data/demoCredentials";
 import { createSessionToken } from "../lib/session";
+import { verifyPassword } from "../lib/password";
 
 export interface ActionResponse {
   success: boolean;
@@ -38,8 +40,9 @@ export async function createSession(
   }
 
   const account = demoUsers.find((user) => user.email === validation.data.email);
-  if (!account) {
-    return { success: false, message: "The partner account is not registered in the demo system." };
+  const passwordHash = demoPasswordHashes[validation.data.email];
+  if (!account || !passwordHash || !(await verifyPassword(validation.data.password, passwordHash))) {
+    return { success: false, message: "Invalid email or password." };
   }
 
   await storeSession(account.id);
@@ -69,12 +72,13 @@ export async function loginAction(
     };
   }
 
-  const { email } = validation.data;
+  const { email, password } = validation.data;
   const account = demoUsers.find((user) => user.email === email);
-  if (!account) {
+  const passwordHash = demoPasswordHashes[email];
+  if (!account || !passwordHash || !(await verifyPassword(password, passwordHash))) {
     return {
       success: false,
-      message: "Autentikasi gagal: akun mitra tidak terdaftar pada sistem.",
+      message: "Autentikasi gagal: email atau kata sandi tidak valid.",
     };
   }
 

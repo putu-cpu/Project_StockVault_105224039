@@ -138,7 +138,7 @@ export function LoginPage({ onLogin, statusMessage }: LoginPageProps) {
           </form>
 
           <div className="login-footnote">
-            <p>Local demo access · any non-empty password</p>
+            <p>Local demo password · StokVault-Test-2026!</p>
             <p className="mt-2">Seller: seller@alamzempol.com</p>
             <p>Grand Hyatt Bali: hotel@grandhyatt.com</p>
             <p>Ayana Resort Bali: hotel@ayana.com</p>

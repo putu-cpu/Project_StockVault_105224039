@@ -1,0 +1,3 @@
+STATUS: NOT RUN
+Reason: This workspace has no authorized Linux VM or Lynis executable.
+Required: Capture the raw baseline audit as described in hardening-demo.md before applying VM controls.

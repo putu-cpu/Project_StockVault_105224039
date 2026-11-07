@@ -1,0 +1,3 @@
+STATUS: NOT RUN
+Reason: No container runtime or vulnerability scanner is installed in this workspace.
+Required: Scan the hardened final image; confirm zero critical findings or document approved exceptions.

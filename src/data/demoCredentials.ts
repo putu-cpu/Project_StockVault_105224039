@@ -1,0 +1,8 @@
+export const demoPasswordHashes: Record<string, string> = {
+  "seller@alamzempol.com":
+    "scrypt$16384$8$1$8d7dd76a0d0350d5c108e17df6d129e5$0a0fb77f81170a88baeac3220eedc107859498496cbcee5ccd032c1daf061785fdb93f3bcdaf07234b0250b986b6735c09e8e27930e30e97abe20f2deed54907",
+  "hotel@grandhyatt.com":
+    "scrypt$16384$8$1$c3e9082cc999b14b1d864fb33299ed1a$a74bc0b9ed5875c067ff649476b514525985faf5555bffe4b9eed739ea4a74b80430b670ad4886848b71786479c5d42a2d20644cbfe0cefb7036a243a30bb5c6",
+  "hotel@ayana.com":
+    "scrypt$16384$8$1$76638553613ffa7a31abbcb93ee6ac0d$413d9e7989f0f75370feafc1964ff37b30fbe057c2ed0a83dc025bd343761056256b2ba72b7a93bdbff49af286f5a6e0e2bed68af36c98ea593b9a8b52c211b2",
+};

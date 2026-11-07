@@ -1,0 +1,3 @@
+STATUS: NOT RUN
+Reason: No container runtime or vulnerability scanner is installed in this workspace.
+Required: Scan the approved pre-hardening image and record its digest and scanner version.
