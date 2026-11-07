@@ -15,7 +15,7 @@ Daftar risiko berdasarkan analisis ancaman STRIDE, dinilai berdasarkan kondisi a
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **RSK-01** | `THR-05` (Info Disclosure) | **High (3)** | **High (3)** | **9 (Kritis)** | **Prioritas 1:** Saat ini state aplikasi disimpan dalam satu LocalStorage global tanpa kredensial terenkripsi, berisiko tinggi membocorkan data rahasia antar hotel mitra. |
 | **RSK-02** | `THR-02` & `THR-03` (Tampering) | **High (3)** | **High (3)** | **9 (Kritis)** | **Prioritas 2:** Inti bisnis StokVault adalah *Immutable Ledger*. Jika data stok/hash bisa diedit via DevTools/LocalStorage, fitur *Locked* menjadi tidak berguna. |
-| **RSK-03** | `THR-10` (Privilege Escalation)| **Medium (2)**| **High (3)** | **6 (Tinggi)** | **Prioritas 3:** Seller bisa mengeksploitasi fungsi edit tanpa menunggu *Edit Approval* dari Hotel, memicu sengketa tagihan. |
+| **RSK-03** | `THR-10` (Privilege Escalation)| **Medium (2)**| **High (3)** | **6 (Tinggi)** | **Prioritas 3:** Pengguna dapat memanipulasi state client untuk menyetujui terminasi atau menghapus kontrak tanpa otorisasi server-side. |
 | **RSK-04** | `THR-07` (Denial of Service) | **High (3)** | **Medium (2)**| **6 (Tinggi)** | **Prioritas 4:** Belum ada validasi tipe data ketat pada form input sisa stok (*Stock Opname*), sehingga input negatif/huruf bisa merusak kalkulasi IDR. |
 | **RSK-05** | `THR-04` (Repudiation) | **Medium (2)**| **Medium (2)**| **4 (Sedang)** | **Prioritas 5:** Penguncian data saat ini belum merekam identitas staf hotel (`hotelId` & `timestamp`) secara persisten dalam payload Hash. |
 
@@ -31,8 +31,8 @@ Daftar risiko berdasarkan analisis ancaman STRIDE, dinilai berdasarkan kondisi a
 * **Rencana Kontrol:** Mengintegrasikan pustaka `crypto.ts` untuk memverifikasi `verifyDataHash()` setiap kali halaman di-render. Jika Hash tidak cocok dengan payload data, sistem otomatis menampilkan peringatan "Data Tampered / Unverified".
 * **Dipetakan ke:** **Tugas 2 (Data Validation & Integrity Checks)**.
 
-#### **3. Kontrol untuk RSK-03 (Edit Request State Machine)**
-* **Rencana Kontrol:** Mengunci input formulir secara eksplisit dengan properti `disabled` jika `status === 'LOCKED'` dan `editApproved === false`.
+#### **3. Kontrol untuk RSK-03 (Termination Approval & Deletion Authorization)**
+* **Rencana Kontrol:** Validasi role Seller dan status `TERMINATION_REQUESTED` di server sebelum mengubah status menjadi `TERMINATED`; otorisasi ulang penghapusan kontrak di server.
 * **Dipetakan ke:** **Tugas 2 (Access Control Logic)**.
 
 #### **4. Kontrol untuk RSK-04 (Client-Side Form Validation)**

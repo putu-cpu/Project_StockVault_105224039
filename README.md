@@ -39,14 +39,14 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 
 | Fitur | Deskripsi | Peran (Role) |
 | :--- | :--- | :--- |
-| **Master Catalog Management** | Menambah, memperbarui, dan mengelola katalog produk master CV. Alam Zempol. | Seller |
+| **Master Catalog Management** | Seller dapat menambah, memperbarui, melihat, dan menghapus produk tersimpan; katalog aktif disinkronkan dengan pemilih pesanan hotel. | Seller |
 | **Hotel Workspace Isolation** | Folder terpisah khusus tiap hotel mitra (*Grand Hyatt Bali*, *Ayana Resort Bali*). | Seller & Hotel |
+| **Buyer-Initiated Orders** | Staf hotel memilih produk katalog dan durasi kontrak; sistem membuat slot tagihan bulanan. | Hotel (Buyer) |
 | **Immutable Locking & Hash SHA-256** | Mengunci data penerimaan barang secara permanen dan menerbitkan bukti digital. | Hotel (Buyer) |
-| **Edit Access Approval Flow** | Alur persetujuan saat Seller mengajukan pembukaan akses edit pada data yang terlanjur terkunci. | Seller & Hotel |
 | **Consolidated "Locked Stock" View** | Ringkasan terpusat seluruh daftar stok produk yang telah dikunci dalam satu halaman. | Seller & Hotel |
 | **Real-Time Stock Opname & Invoicing** | Pengisian sisa stok (*Remaining Stock*) yang seketika mengaktifkan tombol pembayaran *Pay Now*. | Hotel (Buyer) |
 | **Interactive Payment Gateway** | Pilihan metode pembayaran interaktif (Virtual Account BCA/Mandiri, QRIS, Transfer Bank) yang otomatis memperbarui status menjadi **PAID**. | Hotel (Buyer) |
-| **Terminated Contract & Delete Action** | Menandai kontrak yang berakhir (*Terminated*) dan opsi tombol **Delete** untuk menghapus permanen catatan dari workspace. | Seller & Hotel |
+| **Seller-Approved Contract Termination** | Hotel meminta terminasi; Seller menyetujui atau menolak sebelum record dapat dihapus. | Seller & Hotel |
 
 ---
 
@@ -57,8 +57,8 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 * **Styling & UI:** Tailwind CSS v4 & Custom Styles (`src/styles.css` / PostCSS)
 * **Testing Framework:** Vitest
 * **Icons & Assets:** Lucide React Icons
-* **Database:** SQLite with Prisma ORM 7 (`project/prisma/schema.prisma`)
-* **Prototype data:** Dashboard still uses the TypeScript data module (`src/data/mockData.ts`)
+* **Database:** PostgreSQL with Prisma ORM 7 (`project/prisma/schema.prisma`)
+* **Persistent data:** Master catalog uses PostgreSQL; transaction and billing workflows remain session-local prototype state.
 
 ---
 
@@ -111,16 +111,17 @@ Use Node.js 20 or newer.
 
 ```bash
 npm install
-npm run db:migrate -- --name init
+npm run db:migrate
 npm run db:generate
+npm run db:seed
 npm run dev
 ```
 
-Run these commands from the `project/` directory. Next.js starts on port 3000 (`next dev`). Run `npm run check` for TypeScript validation, `npm test` for Vitest suite, and `npm run build` for a production build. Use `npm run db:studio` to inspect the local SQLite database.
+Run these commands from the `project/` directory after configuring `DATABASE_URL` in `.env`. Set `SESSION_SECRET` to a random secret of at least 32 characters for production; development uses an ephemeral secret. Next.js starts on port 3000 (`next dev --port 3000`). Run `npm run check` for TypeScript validation, `npm test` for Vitest suite, and `npm run build` for a production build. Use `npm run db:studio` to inspect PostgreSQL.
 
 ## Database and prototype boundaries
 
-The Prisma schema and SQLite migrations define persistent storage for suppliers, hotels, users, products, transactions, stock records, invoices, payments, and audit events. The database starts empty. The catalog, partner directory, demo identities, and dashboard state still come from local TypeScript data; UI changes reset on refresh and are not written to SQLite yet. Login is a routing demo, not authentication, and client-side filtering is not a security boundary. SHA-256 is a browser-generated snapshot fingerprint, not a trusted digital signature. Bank methods and payment confirmation are simulations; no funds move and transfer slips are not uploaded. Production use requires server-side database operations, real authentication, tenant authorization, durable audit controls, trusted signing, secure receipt storage, and a payment provider.
+The Prisma schema and PostgreSQL migrations define persistent storage for suppliers, hotels, users, products, transactions, stock records, invoices, payments, and audit events. The master catalog is read and changed through seller-authorized server actions; seed it with `npm run db:seed`. Transactions, invoices, and dashboard state remain in-memory demo workflows and reset on refresh. Demo login accepts any non-empty password for a listed partner account; its signed session cookie is not a replacement for production identity and credential management. SHA-256 is a browser-generated snapshot fingerprint, not a trusted digital signature. Bank methods and payment confirmation are simulations; no funds move and transfer slips are not uploaded. Production use requires durable transaction workflows, verified authentication, tenant authorization, audit controls, trusted signing, secure receipt storage, and a payment provider.
 
 See [the database design](./project/docs/rancangan-data.md) for the entity diagram, keys, constraints, delete policy, and setup instructions.
 
@@ -168,4 +169,3 @@ Komponen kriptografi bertindak sebagai **Digital Stamper** saat transaksi bersta
 * **Sumber Keacakan (*Randomness Source*):** `crypto.getRandomValues()` (CSPRNG bawaan peramban web) digunakan saat membutuhkan generasi *Salt/Nonce* acak.
 
 ---
-

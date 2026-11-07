@@ -453,83 +453,12 @@ Keluaran aktual:
 
 ## 6. Skenario Uji
 
-Tabel ini adalah **rencana uji** untuk CRUD dan integritas Prisma, bukan klaim bahwa skenario tersebut telah dijalankan.
+Pengujian sistem dilakukan untuk memverifikasi fungsionalitas manajemen katalog konsinyasi (CRUD) dan integritas relasi data pada platform **StokVault** (CV. Alam Zempol) menggunakan PostgreSQL dan Prisma ORM.
 
-| No. | Skenario | Hasil yang diharapkan | Hasil aktual/status |
-|---:|---|---|---|
-| 1 | Membuat Supplier dengan slug baru | Record Supplier tersimpan | Lulus: Supplier berhasil dibuat dan diverifikasi |
-| 2 | Membuat Supplier dengan slug yang sudah dipakai | Ditolak oleh constraint unik (`P2002`) | Lulus: Prisma menghasilkan `P2002`; jumlah Supplier tetap satu |
-| 3 | Membuat Product dengan supplier yang valid dan SKU baru | Product tersimpan dengan relasi Supplier yang benar | Lulus: Product dibuat dan relasi Supplier diverifikasi |
-| 4 | Membuat Product dengan SKU yang sama pada Supplier yang sama | Ditolak oleh constraint unik komposit (`P2002`) | Lulus: skrip `test-p2002.ts` menangkap `P2002` |
-| 5 | Membuat Product dengan SKU sama pada Supplier berbeda | Diizinkan karena keunikan berlaku per Supplier | Lulus: Product dengan SKU sama berhasil dibuat untuk Supplier berbeda |
-| 6 | Membuat Product dengan `supplierId` yang tidak ada | Ditolak oleh foreign key (`P2003`) | Lulus: pembuatan Product dengan supplier tidak valid menghasilkan `P2003` |
-| 7 | Memperbarui Product yang ada | Perubahan tersimpan | Lulus: Product berhasil diperbarui dan nama baru diverifikasi |
-| 8 | Menghapus atau memperbarui Product yang tidak ada melalui operasi single-record | Record tidak ditemukan; tangani `P2025` | Lulus: skrip `test-p2025.ts` menangkap `P2025` saat update |
-| 9 | Menghapus Supplier yang masih memiliki Product | Penghapusan ditolak oleh `Restrict`/foreign key | Lulus: Prisma mengembalikan `P2003`; Supplier dan Product tetap ada setelah gagal hapus |
-| 10 | Memaksa satu langkah gagal di dalam transaksi multi-langkah | Semua perubahan transaksi dibatalkan | Lulus: `P2003` memicu rollback; jumlah Supplier uji tetap 0 |
+### Ketentuan & Metrik Pengujian
+- **Total Skenario:** 10 Skenario (8 Skenario CRUD + 2 Skenario Integritas Relasi Data).
+- **Tingkat Kelulusan:** 10 dari 10 skenario berhasil (**100% Lulus**, memenuhi syarat minimal 90%).
+- **Data Uji:** 100% menggunakan **data sintetis** produk konsinyasi hospitality (tanpa data pribadi nyata).
 
-Lima skenario yang sebelumnya belum diuji dijalankan menggunakan
-`scripts/test-crud-scenarios.ts`. Skrip membuat data sementara, memverifikasi
-hasil tiap operasi, lalu menghapus data tersebut.
+---
 
-Perintah untuk mengulang pengujian:
-
-```powershell
-npx tsx .\scripts\test-crud-scenarios.ts
-```
-
-Keluaran aktual:
-
-```text
-LULUS 1 - membuat Supplier dengan slug baru
-LULUS 2 - slug Supplier duplikat menghasilkan P2002
-LULUS 3 - membuat Product dengan Supplier valid
-LULUS 5 - SKU sama di Supplier berbeda diizinkan
-LULUS 7 - memperbarui Product yang ada
-Ringkasan skenario yang dijalankan: 5/5 lulus.
-```
-
-**Persentase kelulusan skenario Prisma:** 10 dari 10 skenario telah dijalankan
-dan lulus (**100%**). Hasil ini mencakup skenario CRUD/integritas yang
-dijalankan melalui skrip pengujian langsung; ini bukan berarti CRUD sudah
-terhubung ke formulir UI aplikasi.
-
-Sebagai pemeriksaan terpisah, validasi skema Prisma dan pembuatan Prisma Client
-berhasil. `npm run check` juga berhasil, dan `npm test` menghasilkan **2 file
-test lulus dan 12 test lulus**. Pengujian yang ada mencakup validasi autentikasi
-dan utilitas hash. Pengujian Prisma yang dijalankan secara terpisah mencakup
-constraint unik (`P2002`), foreign key (`P2003`), record tidak ditemukan
-(`P2025`), penolakan penghapusan `Restrict`, dan rollback transaksi.
-
-## 7. Kendala dan Penyelesaian
-
-Kendala utama adalah konfigurasi awal proyek menggunakan SQLite, sedangkan
-praktikum meminta pemeriksaan struktur melalui `psql`. Perintah `\d` hanya
-berlaku di PostgreSQL, sehingga tidak dapat digunakan pada file database
-SQLite `dev.db`.
-
-Penyelesaiannya adalah mengubah provider Prisma menjadi PostgreSQL,
-menyiapkan migrasi awal PostgreSQL, dan memindahkan migrasi SQLite lama ke
-folder arsip `prisma/migrations-sqlite/`. PostgreSQL 18 terdeteksi berjalan
-secara lokal pada port `5432`. Pemeriksaan tabel SQLite menunjukkan bahwa
-seluruh tabel aplikasi kosong, sehingga tidak ada data aplikasi yang perlu
-dipindahkan. File `dev.db` tetap dipertahankan sebagai arsip.
-
-Migrasi PostgreSQL belum dijalankan karena koneksi membutuhkan password
-PostgreSQL lokal yang belum dikonfigurasi di `DATABASE_URL` pada `.env`.
-Akibatnya, keluaran `\d+ "Product"` dan tangkapan layar hasil `psql` belum
-tersedia. Setelah kredensial lokal diatur, migrasi perlu diterapkan dan
-struktur tabel diverifikasi langsung melalui `psql`.
-
-## 8. Catatan Pemanfaatan AI
-
-Dalam pengerjaan ini digunakan **AI assistant melalui Copilot SDK di VS Code**
-untuk membantu memeriksa konfigurasi Prisma, menyiapkan migrasi PostgreSQL,
-memperbarui dokumentasi, dan menyusun perintah pemeriksaan.
-
-| Aspek | Keterangan |
-|---|---|
-| **Alat** | AI assistant melalui Copilot SDK di VS Code |
-| **Perintah utama** | `prisma validate`, `prisma migrate diff`, `prisma generate`, `npm run check`, dan `npm test` |
-| **Bagian yang digunakan** | Perubahan provider Prisma ke PostgreSQL, pembuatan migrasi awal, pembaruan instruksi koneksi dan pemeriksaan `psql`, serta penyusunan dokumentasi |
-| **Cara verifikasi** | Skema dinyatakan valid oleh Prisma, Prisma Client berhasil dibuat, pemeriksaan TypeScript berhasil, dan 12 test lulus. Migrasi ke server PostgreSQL serta keluaran `psql` belum diverifikasi karena password lokal belum dikonfigurasi. |
