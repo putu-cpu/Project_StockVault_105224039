@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { demoUsers } from "../data/mockData";
-import { generateDataHash } from "../utils/crypto";
+import { generateAuthenticatedSignature } from "../utils/crypto";
 
 export const lockDeliverySchema = z.object({
   transactionId: z.string().min(1, "ID transaksi tidak boleh kosong"),
@@ -30,7 +30,7 @@ export interface TransactionActionResult {
  * 1. Sesi: Verifikasi otentikasi pengguna via cookie sesi aktif
  * 2. Validasi Bentuk: Evaluasi struktur payload menggunakan Zod safeParse()
  * 3. Validasi Semantik: Validasi hak akses kepemilikan (RBAC/IDOR), status transaksi, dan konsistensi stok
- * 4. Mutasi: Perhitungan Hash SHA-256 dan penguncian status transaksi permanen
+ * 4. Mutasi: Penerbitan HMAC-SHA256 dan penguncian status transaksi permanen
  * 5. Revalidasi: revalidatePath() untuk memperbarui data cache Next.js
  * 6. Redirect / Response: Mengembalikan hasil mutasi atau mengarahkan navigasi
  */
@@ -89,17 +89,23 @@ export async function lockDeliveryAction(
     }
   }
 
-  // 4. MUTASI: Penerbitan Hash Kriptografi SHA-256 & Pembekuan Data
+  // 4. MUTASI: Penerbitan HMAC-SHA256 & Pembekuan Data
   const timestamp = new Date().toISOString();
   const payloadSnapshot = {
     transactionId,
     hotelId: user.hotelId,
-    receivedQuantities,
-    lockedBy: user.name,
-    lockedAt: timestamp,
+    timestamp,
+    totalItems: Object.values(receivedQuantities).reduce(
+      (total, quantity) => total + quantity,
+      0,
+    ),
+    itemsJson: JSON.stringify(
+      Object.entries(receivedQuantities).sort(([left], [right]) =>
+        left.localeCompare(right),
+      ),
+    ),
   };
-
-  const hashSignature = `SHA256: ${generateDataHash(payloadSnapshot)}`;
+  const signature = generateAuthenticatedSignature(payloadSnapshot);
 
   // 5. REVALIDASI PATH: Bersihkan data cache rute terkait
   revalidatePath(`/hotel/${user.hotelId}`);
@@ -109,7 +115,6 @@ export async function lockDeliveryAction(
   return {
     success: true,
     message: "Data pengiriman berhasil diverifikasi dan dikunci permanen.",
-    signature: hashSignature,
+    signature: JSON.stringify(signature),
   };
 }
-

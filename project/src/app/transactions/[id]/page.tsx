@@ -9,7 +9,7 @@ import {
   Lock,
   ShieldCheck,
 } from "lucide-react";
-import { generateDataHash } from "@/src/utils/crypto";
+import { generateAuthenticatedSignature } from "@/src/utils/crypto";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -19,21 +19,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { id } = await params;
   return {
     title: `Verifikasi Transaksi ${id} | StokVault`,
-    description: `Audit jejak digital dan stempel hash kriptografi SHA-256 untuk transaksi konsinyasi ${id}.`,
+    description: `Contoh paket autentikasi HMAC-SHA256 untuk transaksi konsinyasi ${id}.`,
   };
 }
 
 export default async function TransactionVerificationPage({ params }: PageProps) {
   const { id } = await params;
 
-  // Generate an audit verification sample hash for this dynamic transaction ID
-  const auditSamplePayload = {
+  const samplePayload = {
     transactionId: id,
-    auditStandard: "STOKVAULT-SEC-0.1",
-    hashAlgorithm: "SHA-256",
-    nonRepudiation: "ACTIVE",
+    hotelId: "sample-hotel",
+    timestamp: new Date().toISOString(),
+    totalItems: 0,
+    itemsJson: "[]",
   };
-  const verificationHash = generateDataHash(auditSamplePayload);
+  const signature = generateAuthenticatedSignature(samplePayload);
 
   return (
     <div className="min-h-screen bg-[#f4f5f1] text-[#242923] p-4 sm:p-8">
@@ -70,7 +70,7 @@ export default async function TransactionVerificationPage({ params }: PageProps)
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-800 rounded-full border border-emerald-200 text-xs font-semibold">
               <ShieldCheck size={16} className="text-emerald-600" />
-              Verified Ledger Record
+              HMAC-SHA256 sample · not a stored record
             </div>
           </div>
 
@@ -78,11 +78,13 @@ export default async function TransactionVerificationPage({ params }: PageProps)
           <div className="space-y-3">
             <h2 className="text-xs font-bold uppercase tracking-wider text-stone-500 flex items-center gap-2">
               <Hash size={14} />
-              Fingerprint Digital SHA-256 (Parameter: {id})
+              Paket Authenticated Signature (Parameter: {id})
             </h2>
             <div className="p-4 bg-stone-950 text-emerald-400 font-mono text-xs rounded-lg break-all border border-stone-800 space-y-2">
-              <div className="text-stone-400 text-[11px]">// Stempel Hash Kriptografi Terverifikasi:</div>
-              <div>SHA256: {verificationHash}</div>
+              <div className="text-stone-400 text-[11px]">// Contoh autentikasi, bukan catatan transaksi tersimpan:</div>
+              <div>HMAC-SHA256: {signature.authTag}</div>
+              <div>Nonce: {signature.nonce}</div>
+              <div>AAD: {signature.aad}</div>
             </div>
           </div>
 
@@ -124,4 +126,3 @@ export default async function TransactionVerificationPage({ params }: PageProps)
     </div>
   );
 }
-
