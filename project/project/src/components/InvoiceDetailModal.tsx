@@ -1,4 +1,4 @@
-import { FileCheck2, LockKeyhole, MapPin, X } from "lucide-react";
+import { ExternalLink, FileCheck2, LockKeyhole, MapPin, X } from "lucide-react";
 import { DataTable } from "./DataTable";
 import { StatusBadge } from "./StatusBadge";
 import { formatIDR } from "../data/mockData";
@@ -9,12 +9,10 @@ interface InvoiceDetailModalProps {
   open: boolean;
   transaction: Transaction | null;
   onClose: () => void;
-  onRequestEdit?: (transactionId: string) => void;
-  onEditApproved?: (transaction: Transaction) => void;
   onDeleteRecord?: (transactionId: string) => void;
 }
 
-export function InvoiceDetailModal({ open, transaction, onClose, onRequestEdit, onEditApproved, onDeleteRecord }: InvoiceDetailModalProps) {
+export function InvoiceDetailModal({ open, transaction, onClose, onDeleteRecord }: InvoiceDetailModalProps) {
   const dialogRef = useFocusTrap<HTMLDivElement>(open, onClose);
   if (!open || !transaction) return null;
 
@@ -48,10 +46,16 @@ export function InvoiceDetailModal({ open, transaction, onClose, onRequestEdit, 
             {transaction.paymentReceiptName && <p className="mt-1 break-all text-xs text-stone-600">Proof: {transaction.paymentReceiptName}</p>}
             {transaction.hashSignature && <p className="mt-2 break-all font-mono text-[10px] leading-5 text-emerald-900">{transaction.hashSignature}</p>}
           </div>
-          <div className="flex flex-wrap justify-end gap-2">
-            {transaction.status === "LOCKED" && transaction.paymentStatus === "UNPAID" && onRequestEdit && !transaction.editAccessRequested && !transaction.editAccessApproved && <button className="button-secondary" type="button" onClick={() => onRequestEdit(transaction.id)}>Request Edit Access</button>}
-            {transaction.editAccessRequested && !transaction.editAccessApproved && <span className="edit-access-state">Awaiting hotel approval</span>}
-            {transaction.editAccessApproved && onEditApproved && <button className="button-primary" type="button" onClick={() => onEditApproved(transaction)}>Edit locked record</button>}
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <a
+              href={`/transactions/${transaction.id}`}
+              target="_blank"
+              rel="noreferrer"
+              className="button-tertiary inline-flex items-center gap-1.5"
+              title="Buka sertifikat verifikasi kriptografi rute dinamis"
+            >
+              <ExternalLink size={12} /> Audit SHA-256
+            </a>
             {transaction.status === "TERMINATED" && onDeleteRecord && <button className="button-danger" type="button" onClick={() => onDeleteRecord(transaction.id)}>Delete Record</button>}
             <button className="button-secondary" type="button" onClick={onClose}>Done</button>
           </div>

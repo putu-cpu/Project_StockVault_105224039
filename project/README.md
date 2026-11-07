@@ -40,6 +40,16 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 
 | Fitur | Deskripsi | Peran (Role) |
 | :--- | :--- | :--- |
+<<<<<<< HEAD
+| **Master Catalog Management** | Seller dapat menambah, memperbarui, melihat, dan menghapus produk tersimpan; katalog aktif disinkronkan dengan pemilih pesanan hotel. | Seller |
+| **Hotel Workspace Isolation** | Folder terpisah khusus tiap hotel mitra (*Grand Hyatt Bali*, *Ayana Resort Bali*). | Seller & Hotel |
+| **Buyer-Initiated Orders** | Staf hotel memilih produk katalog dan durasi kontrak; sistem membuat slot tagihan bulanan. | Hotel (Buyer) |
+| **Immutable Locking & Hash SHA-256** | Mengunci data penerimaan barang secara permanen dan menerbitkan bukti digital. | Hotel (Buyer) |
+| **Consolidated "Locked Stock" View** | Ringkasan terpusat seluruh daftar stok produk yang telah dikunci dalam satu halaman. | Seller & Hotel |
+| **Real-Time Stock Opname & Invoicing** | Pengisian sisa stok (*Remaining Stock*) yang seketika mengaktifkan tombol pembayaran *Pay Now*. | Hotel (Buyer) |
+| **Interactive Payment Gateway** | Pilihan metode pembayaran interaktif (Virtual Account BCA/Mandiri, QRIS, Transfer Bank) yang otomatis memperbarui status menjadi **PAID**. | Hotel (Buyer) |
+| **Seller-Approved Contract Termination** | Hotel meminta terminasi; Seller menyetujui atau menolak sebelum record dapat dihapus. | Seller & Hotel |
+=======
 | **Master Catalog Management** | Kelola katalog produk master CV. Alam Zempol (Nama, Kategori, Ukuran, Harga IDR). | Seller |
 | **Simplified Delivery Tracker** | Pembaruan status pengiriman secara manual (`PREPARING` $\rightarrow$ `IN_TRANSIT`) tanpa tombol *Create Delivery* kaku. | Seller |
 | **Arrival & Immutable Locking** | Konfirmasi barang tiba (`ARRIVED`) dan penguncian data permanen disertai stempel SHA-256. | Hotel (Buyer) |
@@ -48,17 +58,25 @@ Dalam skema konsinyasi produk perawatan tubuh di industri perhotelan, transaksi 
 | **Edit Access Approval Flow** | Alur persetujuan saat Seller mengajukan pembukaan akses edit pada data yang terlanjur terkunci. | Seller & Hotel |
 | **Centralized Hotel Dashboard** | Dashboard hotel yang di-redesain rapi dengan tab *Locked Items*, *Monthly Billing*, *Pending Verification*, dan *Terminated Contracts*. | Hotel (Buyer) |
 | **Interactive Payment Gateway** | Pilihan pembayaran interaktif (Virtual Account BCA/Mandiri, QRIS, Transfer Bank) yang otomatis memperbarui status menjadi **PAID**. | Hotel (Buyer) |
+>>>>>>> 3467948cddf64bc8017ec5b9417d8bbd4f8c98ac
 
 ---
 
 ## 🛠️ Arsitektur & Teknologi Stack
 
+<<<<<<< HEAD
+* **Frontend Framework:** Next.js (App Router) & React 19 dengan TypeScript
+* **Build Tool & Server:** Next.js (dikonfigurasi pada port `localhost:3000`)
+* **Styling & UI:** Tailwind CSS v4 & Custom Styles (`src/styles.css` / PostCSS)
+=======
 * **Frontend Framework:** React 18 dengan TypeScript
 * **Build Tool & Server:** Vite (Port `localhost:3000`)
 * **Styling & UI:** Tailwind CSS & Custom Directives (`src/styles.css`)
+>>>>>>> 3467948cddf64bc8017ec5b9417d8bbd4f8c98ac
 * **Testing Framework:** Vitest
 * **Icons & Assets:** Lucide React Icons
-* **Data Persistence (Mock):** TypeScript Data Module (`src/data/mockData.ts`)
+* **Database:** PostgreSQL with Prisma ORM 7 (`project/prisma/schema.prisma`)
+* **Persistent data:** Master catalog uses PostgreSQL; transaction and billing workflows remain session-local prototype state.
 
 ---
 
@@ -70,6 +88,43 @@ Project_Pemweb/
 ├── .git/
 ├── README.md
 └── project/
+<<<<<<< HEAD
+    ├── .next/                      # Output Build Next.js
+    ├── docs/                       # Dokumentasi & Bukti Pengujian UI/UX
+    │   ├── 360 px.png              # Bukti Tampilan Mobile
+    │   ├── 768 px.png              # Bukti Tampilan Tablet
+    │   ├── 1280 px.png             # Bukti Tampilan Desktop
+    │   ├── AI_LOG.md               # Log Penggunaan AI (Gemini/ChatGPT)
+    │   └── lighthouse.png          # Bukti Skor Aksesibilitas Lighthouse (≥ 85)
+    ├── node_modules/               # Dependensi Project
+    ├── public/                     # Aset Publik
+    ├── security/                   # Berkas Analisis Keamanan Siber (Penanda sec-0.1)
+    │   ├── asset-inventory.md      # Inventarisasi Aset Sistem & Data
+    │   ├── dfd.md                  # Data Flow Diagram Level 1 (2 Trust Boundaries)
+    │   ├── risk-register.md        # Matriks & Rencana Kontrol 5 Risiko Prioritas
+    │   └── threat-model.md         # 10 Ancaman STRIDE
+    ├── src/                        # Kode Sumber Utama
+    │   ├── app/                    # Next.js App Router
+    │   │   ├── layout.tsx          # Root Server Component & Global Metadata
+    │   │   ├── page.tsx            # Static Route (/)
+    │   │   ├── globals.css         # Styling Directive
+    │   │   ├── hotel/[id]/         # Dynamic Route (/hotel/[id]) & generateStaticParams
+    │   │   └── transactions/[id]/  # Dynamic Route (/transactions/[id]) Audit Certificate
+    │   ├── components/             # Komponen Reusable (Sidebar, Modals, StatusBadge, dll.)
+    │   ├── data/                   # Mock Data (mockData.ts — Master Katalog CV. Alam Zempol)
+    │   ├── hooks/                  # Custom React Hooks
+    │   ├── views/                  # Tampilan Halaman Utama (LoginPage, SellerDashboardPage, HotelDashboardPage)
+    │   ├── types/                  # Interface & Tipe TypeScript (index.ts)
+    │   └── utils/                  # Utilitas Kriptografi & Unit Test
+    │       ├── crypto.ts           # Implementasi Hash SHA-256
+    │       └── crypto.test.ts      # 4 Skenario Automated Testing (Vitest)
+    │   ├── App.tsx                 # Root Client Component & Business State Logic
+    │   └── styles.css              # Custom Tailwind & CSS Directives
+    ├── next.config.ts              # Konfigurasi Next.js
+    ├── postcss.config.mjs          # Konfigurasi PostCSS Tailwind CSS
+    ├── package.json
+    └── tsconfig.json
+=======
     ├── docs/
     │   ├── 360 px.png
     │   ├── 768 px.png
@@ -156,6 +211,7 @@ Project_Pemweb/
     └── tsconfig.tsbuildinfo
 
 
+>>>>>>> 3467948cddf64bc8017ec5b9417d8bbd4f8c98ac
 ```
 # 📘 Petunjuk Instalasi & Jalankan Proyek
 
@@ -220,14 +276,19 @@ Use Node.js 20 or newer.
 
 ```bash
 npm install
+npm run db:migrate
+npm run db:generate
+npm run db:seed
 npm run dev
 ```
 
-Vite starts on port 3000 and automatically tries the next available port if it is occupied. Run `npm run check` for TypeScript validation and `npm run build` for a production build.
+Run these commands from the `project/` directory after configuring `DATABASE_URL` in `.env`. Set `SESSION_SECRET` to a random secret of at least 32 characters for production; development uses an ephemeral secret. Next.js starts on port 3000 (`next dev --port 3000`). Run `npm run check` for TypeScript validation, `npm test` for Vitest suite, and `npm run build` for a production build. Use `npm run db:studio` to inspect PostgreSQL.
 
-## Prototype boundaries
+## Database and prototype boundaries
 
-The catalog, partner directory, and demo identities are local TypeScript data; there are no pre-populated transactions. Changes exist in browser memory and reset on refresh. Login is a routing demo, not authentication, and client-side filtering is not a security boundary. SHA-256 is a browser-generated snapshot fingerprint, not a trusted digital signature. Bank methods and payment confirmation are simulations; no funds move and transfer slips are not uploaded. Production requires server-enforced hotel isolation, authentication, durable append-only records, trusted signing, persistent storage, and a payment provider.
+The Prisma schema and PostgreSQL migrations define persistent storage for suppliers, hotels, users, products, transactions, stock records, invoices, payments, and audit events. The master catalog is read and changed through seller-authorized server actions; seed it with `npm run db:seed`. Transactions, invoices, and dashboard state remain in-memory demo workflows and reset on refresh. Demo login accepts any non-empty password for a listed partner account; its signed session cookie is not a replacement for production identity and credential management. SHA-256 is a browser-generated snapshot fingerprint, not a trusted digital signature. Bank methods and payment confirmation are simulations; no funds move and transfer slips are not uploaded. Production use requires durable transaction workflows, verified authentication, tenant authorization, audit controls, trusted signing, secure receipt storage, and a payment provider.
+
+See [the database design](./project/docs/rancangan-data.md) for the entity diagram, keys, constraints, delete policy, and setup instructions.
 
 
 # Dokumentasi Kebutuhan & Komponen Kriptografi — StokVault
@@ -273,5 +334,3 @@ Komponen kriptografi bertindak sebagai **Digital Stamper** saat transaksi bersta
 * **Sumber Keacakan (*Randomness Source*):** `crypto.getRandomValues()` (CSPRNG bawaan peramban web) digunakan saat membutuhkan generasi *Salt/Nonce* acak.
 
 ---
-
-

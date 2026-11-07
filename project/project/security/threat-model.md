@@ -13,4 +13,4 @@ Berikut 10 ancaman spesifik yang dipetakan langsung ke elemen DFD dan aset yang 
 | **THR-07** | **Denial of Service** | `P-02` | `AST-05` | Pengguna memasukkan angka sisa stok bernilai negatif atau *string* sangat panjang pada form Stock Opname sehingga menyebabkan komponen React *crash*. |
 | **THR-08** | **Denial of Service** | `DS-01` | `AST-05` | LocalStorage dipenuhi oleh pembuatan order palsu secara berulang (spamming) hingga kuota browser penuh (Exhaustion). |
 | **THR-09** | **Elevation of Privilege**| `ACT-02` $\rightarrow$ `P-01` | `AST-02` | Staf Hotel mengubah role menjadi Seller melalui manipulasi state `App.tsx` dan menambah/menghapus Katalog Master CV. Alam Zempol. |
-| **THR-10** | **Elevation of Privilege**| `ACT-01` $\rightarrow$ `P-02` | `AST-03` | Seller mengeklik bypass tombol "Request Edit Access" dan langsung menyunting data `LOCKED` tanpa menunggu persetujuan (*approval*) dari Hotel. |
+| **THR-10** | **Elevation of Privilege**| `ACT-01` $\rightarrow$ `P-02` | `AST-03` | Seller atau pengguna lain memanipulasi state client untuk menyetujui permintaan terminasi atau menghapus kontrak `TERMINATED` tanpa otorisasi server-side. |

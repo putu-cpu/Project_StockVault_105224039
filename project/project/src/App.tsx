@@ -1,11 +1,14 @@
-import { useState } from "react";
+"use client";
+
+import { useEffect, useState, type ReactNode } from "react";
 import { Menu } from "lucide-react";
-import { catalog as initialCatalog, hotelPartners } from "./data/mockData";
+import { hotelPartners } from "./data/mockData";
 import { Sidebar, type SidebarWorkspace } from "./components/Sidebar";
-import { HotelDashboardPage } from "./pages/HotelDashboardPage";
-import { LoginPage } from "./pages/LoginPage";
-import { SellerDashboardPage } from "./pages/SellerDashboardPage";
+import { HotelDashboardPage } from "./views/HotelDashboardPage";
+import { LoginPage } from "./views/LoginPage";
+import { SellerDashboardPage } from "./views/SellerDashboardPage";
 import { generateDataHash } from "./utils/crypto";
+import { logoutAction } from "./actions/auth";
 import type { DeliveryStatus, Item, PaymentMethod, Transaction, TransactionItem, User } from "./types";
 
 async function signDeliverySnapshot(transaction: Transaction, items: TransactionItem[]) {
@@ -20,13 +23,23 @@ async function signDeliverySnapshot(transaction: Transaction, items: Transaction
   return `SHA256: ${generateDataHash(payload)}`;
 }
 
-export default function App() {
+interface AppProps {
+  initialCatalog: Item[];
+  catalogTable: ReactNode;
+}
+
+export default function App({ initialCatalog, catalogTable }: AppProps) {
   const [workspace, setWorkspace] = useState<SidebarWorkspace>("overview");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [masterCatalog, setMasterCatalog] = useState<Item[]>(initialCatalog);
   const [user, setUser] = useState<User | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [workspaceMountKey, setWorkspaceMountKey] = useState(0);
+  const [logoutError, setLogoutError] = useState("");
+
+  useEffect(() => {
+    setMasterCatalog(initialCatalog);
+  }, [initialCatalog]);
 
   const hotel = user?.hotelId ? hotelPartners.find((entry) => entry.id === user.hotelId) : undefined;
   const visibleTransactions = user?.role === "BUYER" && user.hotelId
@@ -81,61 +94,18 @@ export default function App() {
     });
     const hashSignature = await signDeliverySnapshot(transaction, items);
     setTransactions((current) => current.map((transaction) => transaction.id === transactionId
-      ? { ...transaction, items, status: "LOCKED", hashSignature, editAccessRequested: false, editAccessApproved: false }
+      ? { ...transaction, items, status: "LOCKED", hashSignature }
       : transaction));
-  }
-
-  function requestEditAccess(transactionId: string) {
-    if (user?.role !== "SELLER") return;
-    setTransactions((current) => current.map((transaction) => transaction.id === transactionId
-      && transaction.status === "LOCKED"
-      && transaction.paymentStatus === "UNPAID"
-      ? { ...transaction, editAccessRequested: true, editAccessApproved: false }
-      : transaction));
-  }
-
-  function approveEditAccess(transactionId: string) {
-    if (user?.role !== "BUYER" || !user.hotelId) return;
-    setTransactions((current) => current.map((transaction) => transaction.id === transactionId
-      && transaction.hotelId === user.hotelId
-      && transaction.status === "LOCKED"
-      && transaction.paymentStatus === "UNPAID"
-      && transaction.editAccessRequested
-      ? { ...transaction, editAccessApproved: true }
-      : transaction));
-  }
-
-  async function saveApprovedEdit(transactionId: string, requestedItems: TransactionItem[]) {
-    if (user?.role !== "SELLER") throw new Error("Only the supplier can edit a locked record.");
-    const transaction = transactions.find((entry) => entry.id === transactionId);
-    if (!transaction || transaction.status !== "LOCKED" || transaction.paymentStatus !== "UNPAID" || !transaction.editAccessApproved) {
-      throw new Error("Hotel approval is required before editing this record.");
-    }
-    if (requestedItems.length === 0 || new Set(requestedItems.map((line) => line.item.id)).size !== requestedItems.length) {
-      throw new Error("Keep at least one unique product in the delivery.");
-    }
-    const items = requestedItems.map((requested) => {
-      const item = masterCatalog.find((entry) => entry.id === requested.item.id);
-      const previous = transaction.items.find((line) => line.item.id === requested.item.id);
-      if (!item || !Number.isInteger(requested.quantitySent) || requested.quantitySent < 1 || requested.quantitySent < (previous?.quantityReceived ?? 0)) {
-        throw new Error("Each product needs a valid quantity that covers the confirmed received stock.");
-      }
-      return previous
-        ? { ...previous, item, quantitySent: requested.quantitySent }
-        : { item, quantitySent: requested.quantitySent, quantityReceived: 0, remainingStock: 0, remainingStockConfirmed: false };
-    });
-    const hashSignature = await signDeliverySnapshot(transaction, items);
-    setTransactions((current) => current.map((entry) => entry.id === transactionId
-      ? { ...entry, items, hashSignature, editAccessRequested: false, editAccessApproved: false }
-      : entry));
   }
 
   function updateDeliveryStatus(transactionId: string, deliveryStatus: DeliveryStatus) {
-    if (user?.role !== "SELLER" || deliveryStatus === "ARRIVED") return;
-    setTransactions((current) => current.map((transaction) => transaction.id === transactionId && transaction.status === "PENDING"
-      && transaction.deliveryStatus !== "ARRIVED"
-      ? { ...transaction, deliveryStatus }
-      : transaction));
+    if (user?.role !== "SELLER" || (deliveryStatus !== "PREPARING" && deliveryStatus !== "IN_TRANSIT")) return;
+    setTransactions((current) => current.map((transaction) => {
+      if (transaction.id !== transactionId || transaction.status !== "PENDING") return transaction;
+      if (transaction.deliveryStatus === deliveryStatus) return transaction;
+      if (transaction.deliveryStatus !== "PREPARING" || deliveryStatus !== "IN_TRANSIT") return transaction;
+      return { ...transaction, deliveryStatus };
+    }));
   }
 
   function confirmHotelArrival(transactionId: string) {
@@ -189,21 +159,32 @@ export default function App() {
     setTransactions((current) => current.filter((entry) => entry.id !== transactionId));
   }
 
-  function updateCatalog(items: Item[]) {
-    if (user?.role === "SELLER") setMasterCatalog(items);
-  }
-
   function navigate(nextWorkspace: SidebarWorkspace) {
     setWorkspace(nextWorkspace);
     setWorkspaceMountKey((current) => current + 1);
     setMobileMenuOpen(false);
   }
 
-  if (!user) return <LoginPage onLogin={setUser} />;
+  async function signOut() {
+    try {
+      await logoutAction();
+    } catch (error) {
+      console.error("Could not clear the StokVault server session.", error);
+      setLogoutError("Your local workspace was closed, but the server session could not be cleared. Please reload before signing in again.");
+    } finally {
+      setTransactions([]);
+      setMasterCatalog(initialCatalog);
+      setUser(null);
+      setWorkspace("overview");
+      setMobileMenuOpen(false);
+    }
+  }
+
+  if (!user) return <LoginPage statusMessage={logoutError} onLogin={(nextUser) => { setLogoutError(""); setUser(nextUser); }} />;
 
   return (
     <div className="app-frame">
-      <Sidebar user={user} workspace={workspace} pendingCount={pendingOrders} mobileOpen={mobileMenuOpen} onNavigate={navigate} onSignOut={() => { setUser(null); setWorkspace("overview"); setMobileMenuOpen(false); }} />
+      <Sidebar user={user} workspace={workspace} pendingCount={pendingOrders} mobileOpen={mobileMenuOpen} onNavigate={navigate} onSignOut={signOut} />
 
       {mobileMenuOpen && <button type="button" className="mobile-scrim" aria-label="Close navigation" onClick={() => setMobileMenuOpen(false)} />}
 
@@ -214,13 +195,13 @@ export default function App() {
           <div className="topbar-actions">
             <span className="live-indicator"><span /> SYSTEM LIVE</span>
             <span className="topbar-divider" />
-            <span className="topbar-date">{new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date())}</span>
+            <span className="topbar-date" suppressHydrationWarning>{new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date())}</span>
           </div>
         </header>
 
         <div className="content-wrap">
           {user.role === "SELLER" ? (
-            <SellerDashboardPage key={workspaceMountKey} transactions={visibleTransactions} catalog={masterCatalog} workspace={workspace} onNavigate={navigate} onSaveCatalog={updateCatalog} onUpdateDeliveryStatus={updateDeliveryStatus} onReviewTermination={reviewTerminationRequest} onRequestEdit={requestEditAccess} onSaveEdit={saveApprovedEdit} onDeleteRecord={deleteTerminatedRecord} />
+            <SellerDashboardPage key={workspaceMountKey} transactions={visibleTransactions} catalogTable={catalogTable} workspace={workspace} onNavigate={navigate} onUpdateDeliveryStatus={updateDeliveryStatus} onReviewTermination={reviewTerminationRequest} onDeleteRecord={deleteTerminatedRecord} />
           ) : (
             <HotelDashboardPage
               key={workspaceMountKey}
@@ -228,13 +209,13 @@ export default function App() {
               hotelLocation={hotel?.location ?? ""}
               transactions={visibleTransactions}
               catalog={masterCatalog}
+              onRefreshCatalog={setMasterCatalog}
               onCreateOrder={createOrder}
               onConfirmArrival={confirmHotelArrival}
               onLockDelivery={lockHotelDelivery}
               onUpdateStock={updateStock}
               onConfirmPayment={confirmPayment}
               onTerminate={terminatePartnership}
-              onApproveEditAccess={approveEditAccess}
               onDeleteRecord={deleteTerminatedRecord}
             />
           )}

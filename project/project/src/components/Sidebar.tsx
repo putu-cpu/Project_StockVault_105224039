@@ -1,4 +1,4 @@
-import { Building2, ChevronRight, Folder, LayoutDashboard, Leaf, PackageCheck, PackageSearch, Truck } from "lucide-react";
+import { Building2, ChevronRight, ExternalLink, Folder, LayoutDashboard, Leaf, PackageCheck, PackageSearch, Truck } from "lucide-react";
 import { hotelPartners } from "../data/mockData";
 import type { User } from "../types";
 
@@ -44,9 +44,14 @@ export function Sidebar({ user, workspace, pendingCount, mobileOpen, onNavigate,
           <p className="nav-caption sidebar-partners-caption">HOTEL WORKSPACES / PARTNERS</p>
           <nav className="main-nav" aria-label="Hotel partner workspaces">
             {hotelPartners.map((hotel) => (
-              <button className={`nav-link partner-nav-link ${workspace === hotel.id ? "nav-link-active" : ""}`} type="button" key={hotel.id} onClick={() => onNavigate(hotel.id)} aria-current={workspace === hotel.id ? "page" : undefined}>
-                <Folder aria-hidden="true" size={17} /><span className="flex-1 truncate">{hotel.name}</span><ChevronRight aria-hidden="true" className="partner-chevron" size={13} />
-              </button>
+              <div key={hotel.id} className="flex items-center gap-1">
+                <button className={`nav-link partner-nav-link flex-1 ${workspace === hotel.id ? "nav-link-active" : ""}`} type="button" onClick={() => onNavigate(hotel.id)} aria-current={workspace === hotel.id ? "page" : undefined}>
+                  <Folder aria-hidden="true" size={17} /><span className="flex-1 truncate">{hotel.name}</span><ChevronRight aria-hidden="true" className="partner-chevron" size={13} />
+                </button>
+                <a href={`/hotel/${hotel.id}`} className="p-1.5 text-stone-400 hover:text-emerald-800 transition-colors" title={`Buka dynamic route /hotel/${hotel.id}`} aria-label={`Buka dynamic route untuk ${hotel.name}`}>
+                  <ExternalLink size={13} aria-hidden="true" />
+                </a>
+              </div>
             ))}
           </nav>
         </>
@@ -55,6 +60,11 @@ export function Sidebar({ user, workspace, pendingCount, mobileOpen, onNavigate,
           <p className="nav-caption">HOTEL WORKSPACE</p>
           <nav className="main-nav" aria-label="Hotel workspace">
             <button className="nav-link nav-link-active" type="button" onClick={() => onNavigate("overview")} aria-current="page"><LayoutDashboard aria-hidden="true" size={18} /><span>My dashboard</span></button>
+            {activeHotel && (
+              <a href={`/hotel/${activeHotel.id}`} className="nav-link" title={`Buka dynamic route /hotel/${activeHotel.id}`}>
+                <ExternalLink aria-hidden="true" size={16} /><span>Public partner page</span>
+              </a>
+            )}
           </nav>
         </>
       )}
