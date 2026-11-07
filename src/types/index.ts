@@ -51,8 +51,6 @@ export interface Transaction {
   status: TransactionStatus;
   deliveryStatus: DeliveryStatus;
   items: TransactionItem[];
-  editAccessRequested?: boolean;
-  editAccessApproved?: boolean;
   hashSignature?: string;
   paymentStatus: PaymentStatus;
   paymentMethod?: PaymentMethod;

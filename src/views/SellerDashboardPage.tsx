@@ -1,31 +1,24 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Building2, CircleDollarSign, FileCheck2, MapPin, PackageCheck, PackagePlus, PackageSearch, ShieldAlert, Truck } from "lucide-react";
 import { InvoiceDetailModal } from "../components/InvoiceDetailModal";
-import { ProductCatalogModal } from "../components/ProductCatalogModal";
 import { StatCard } from "../components/StatCard";
 import { StatusBadge } from "../components/StatusBadge";
-import { TransactionEditModal } from "../components/TransactionEditModal";
 import { formatIDR, hotelPartners } from "../data/mockData";
-import type { DeliveryStatus, Item, Transaction, TransactionItem } from "../types";
+import type { DeliveryStatus, Transaction } from "../types";
 import type { SidebarWorkspace } from "../components/Sidebar";
 
 interface SellerDashboardPageProps {
   transactions: Transaction[];
-  catalog: Item[];
+  catalogTable: ReactNode;
   workspace: SidebarWorkspace;
   onNavigate: (workspace: SidebarWorkspace) => void;
-  onSaveCatalog: (items: Item[]) => void;
   onUpdateDeliveryStatus: (transactionId: string, status: DeliveryStatus) => void;
   onReviewTermination: (transactionId: string, approved: boolean) => void;
-  onRequestEdit: (transactionId: string) => void;
-  onSaveEdit: (transactionId: string, items: TransactionItem[]) => Promise<void>;
   onDeleteRecord: (transactionId: string) => void;
 }
 
-export function SellerDashboardPage({ transactions, catalog, workspace, onNavigate, onSaveCatalog, onUpdateDeliveryStatus, onReviewTermination, onRequestEdit, onSaveEdit, onDeleteRecord }: SellerDashboardPageProps) {
-  const [catalogOpen, setCatalogOpen] = useState(false);
+export function SellerDashboardPage({ transactions, catalogTable, workspace, onNavigate, onUpdateDeliveryStatus, onReviewTermination, onDeleteRecord }: SellerDashboardPageProps) {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [hotelTab, setHotelTab] = useState<"pending" | "locked" | "paid" | "terminated">("pending");
   const partner = hotelPartners.find((entry) => entry.id === workspace);
   const activePartners = new Set(transactions.filter((entry) => entry.status !== "TERMINATED").map((entry) => entry.hotelId)).size;
@@ -64,19 +57,15 @@ export function SellerDashboardPage({ transactions, catalog, workspace, onNaviga
         <StatCard label="Pending reviews" value={String(pendingCount).padStart(2, "0")} detail={`${unpaidCount} unpaid invoices across partners`} icon={<ShieldAlert size={18} />} tone="orange" />
       </div>
 
-      {terminationRequests.length > 0 && <section className="seller-termination-requests" aria-labelledby="termination-requests-title"><div className="seller-request-heading"><div><p className="eyebrow">SELLER REVIEW REQUIRED</p><h2 id="termination-requests-title">Contract termination requests</h2></div><span>{terminationRequests.length} awaiting review</span></div>{terminationRequests.map((entry) => <div className="seller-termination-row" key={entry.id}><div className="min-w-0"><strong>{entry.hotel}</strong><span>{entry.id} · {entry.contractDurationMonths}-month contract</span></div><div className="flex flex-wrap gap-2"><button className="button-secondary" type="button" onClick={() => onReviewTermination(entry.id, false)}>Reject Request</button><button className="button-danger" type="button" onClick={() => onReviewTermination(entry.id, true)}>Approve Contract Termination</button></div></div>)}</section>}
+      {terminationRequests.length > 0 && <section className="seller-termination-requests" aria-labelledby="termination-requests-title"><div className="seller-request-heading"><div><p className="eyebrow">SELLER REVIEW REQUIRED</p><h2 id="termination-requests-title">Contract termination requests</h2></div><span>{terminationRequests.length} awaiting review</span></div>{terminationRequests.map((entry) => <div className="seller-termination-row" key={entry.id}><div className="min-w-0"><strong>{entry.hotel}</strong><span>{entry.id} · {entry.contractDurationMonths}-month contract</span></div><div className="flex flex-wrap gap-2"><button className="button-secondary" type="button" onClick={() => onReviewTermination(entry.id, false)}>Reject Request</button><button className="button-danger" type="button" onClick={() => onReviewTermination(entry.id, true)}>Approve Termination</button></div></div>)}</section>}
 
       {workspace === "catalog" ? (
-        <div className="panel mt-4 overflow-hidden">
-          <div className="panel-heading"><div><h2>CV. Alam Zempol master catalog</h2><p>Price and product changes sync to new hotel orders.</p></div></div>
-          <div className="overflow-x-auto"><table className="record-table"><caption className="sr-only">Alam Zempol master product catalog and stock price list</caption><thead><tr><th scope="col">Product</th><th scope="col">Size</th><th scope="col">Category</th><th scope="col" className="text-right">Unit price</th></tr></thead><tbody>{catalog.map((item) => <tr key={item.id}><td className="font-medium text-stone-900">{item.name}</td><td>{item.size}</td><td>{item.category}</td><td className="text-right font-semibold">{formatIDR(item.unitPrice)}</td></tr>)}</tbody></table></div>
-          <div className="table-footer"><span>{catalog.length} products in the supplier master list</span><button className="text-link" type="button" onClick={() => setCatalogOpen(true)}><PackageSearch aria-hidden="true" size={13} /> Manage catalog</button></div>
-        </div>
+        catalogTable
       ) : workspace === "deliveries" ? (
         <div className="panel mt-4 overflow-hidden">
           <div className="panel-heading"><div><h2>Delivery tracker</h2><p>Update preparation and transit states; hotel staff confirms arrival.</p></div></div>
-          {transactions.length === 0 ? <div className="empty-state empty-state-compact"><span className="empty-state-mark"><Truck aria-hidden="true" size={21} /></span><h2>No deliveries yet</h2><p>Created deliveries will appear here for shipment tracking.</p><button className="button-secondary" type="button" onClick={() => onNavigate("catalog")}>Open master catalog</button></div> : <div className="overflow-x-auto"><table className="record-table"><caption className="sr-only">Supplier deliveries and current delivery state</caption><thead><tr><th scope="col">Hotel / delivery</th><th scope="col">Products</th><th scope="col">Created</th><th scope="col">Delivery state</th><th scope="col">Record state</th><th scope="col"><span className="sr-only">Review stock detail</span></th></tr></thead><tbody>
-            {transactions.map((transaction) => <tr key={transaction.id}><td><span className="font-semibold text-stone-900">{transaction.hotel}</span><span className="mt-1 block font-mono text-[10px] text-stone-500">{transaction.id}</span></td><td>{transaction.items.length} products</td><td>{transaction.createdAt}</td><td>{transaction.status === "PENDING" && transaction.deliveryStatus !== "ARRIVED" ? <select className="table-select" aria-label={`Delivery status for ${transaction.hotel}`} value={transaction.deliveryStatus} onChange={(event) => onUpdateDeliveryStatus(transaction.id, event.target.value as DeliveryStatus)}><option value="PREPARING">PREPARING</option><option value="IN_TRANSIT">IN_TRANSIT</option></select> : <StatusBadge status={transaction.deliveryStatus} />}</td><td><StatusBadge status={transaction.status} /></td><td><button className="button-tertiary" type="button" onClick={() => setSelectedTransaction(transaction)} aria-label={`Review delivery for ${transaction.hotel}`}>Review delivery</button></td></tr>)}
+          {transactions.length === 0 ? <div className="empty-state empty-state-compact"><span className="empty-state-mark"><Truck aria-hidden="true" size={21} /></span><h2>No deliveries yet</h2><p>Hotel orders will appear here when partner staff request items from the supplier catalog.</p></div> : <div className="overflow-x-auto"><table className="record-table"><caption className="sr-only">Supplier deliveries and current delivery state</caption><thead><tr><th scope="col">Hotel / delivery</th><th scope="col">Products</th><th scope="col">Created</th><th scope="col">Delivery state</th><th scope="col">Record state</th><th scope="col"><span className="sr-only">Review stock detail</span></th></tr></thead><tbody>
+            {transactions.map((transaction) => <tr key={transaction.id}><td><span className="font-semibold text-stone-900">{transaction.hotel}</span><span className="mt-1 block font-mono text-[10px] text-stone-500">{transaction.id}</span></td><td>{transaction.items.length} products</td><td>{transaction.createdAt}</td><td>{transaction.status === "PENDING" && transaction.deliveryStatus !== "ARRIVED" ? <select className="table-select" aria-label={`Delivery status for ${transaction.hotel}`} value={transaction.deliveryStatus} onChange={(event) => onUpdateDeliveryStatus(transaction.id, event.target.value as DeliveryStatus)}><option value="PREPARING" disabled={transaction.deliveryStatus === "IN_TRANSIT"}>PREPARING</option><option value="IN_TRANSIT">IN_TRANSIT</option></select> : <StatusBadge status={transaction.deliveryStatus} />}</td><td><StatusBadge status={transaction.status} /></td><td><button className="button-tertiary" type="button" onClick={() => setSelectedTransaction(transaction)} aria-label={`Review delivery for ${transaction.hotel}`}>Review delivery</button></td></tr>)}
           </tbody></table></div>}
           <div className="table-footer"><span><Truck aria-hidden="true" size={13} /> {transactions.filter((entry) => entry.deliveryStatus === "IN_TRANSIT").length} deliveries in transit</span><span>Arrival confirmation is completed by the receiving hotel</span></div>
         </div>
@@ -125,9 +114,7 @@ export function SellerDashboardPage({ transactions, catalog, workspace, onNaviga
         <div className="table-footer"><span>{partner ? `${partner.name} · ${visibleTransactions.length} records` : `${activePartners} active · ${transactions.length} records`}</span><span><FileCheck2 aria-hidden="true" size={13} /> Seller invoice review</span></div>
       </div>}
       {workspace === "overview" && <div className="overview-bottomline"><span><span className="bottomline-dot" /> Vendor ledger operational</span><button className="text-link" type="button" onClick={() => onNavigate("deliveries")}><Truck aria-hidden="true" size={13} /> Open delivery tracker</button></div>}
-      <ProductCatalogModal open={catalogOpen} mode="manage" catalog={catalog} onClose={() => setCatalogOpen(false)} onSaveCatalog={onSaveCatalog} />
-      <InvoiceDetailModal open={currentSelectedTransaction !== null} transaction={currentSelectedTransaction} onClose={() => setSelectedTransaction(null)} onRequestEdit={onRequestEdit} onEditApproved={(transaction) => { setSelectedTransaction(null); setEditingTransaction(transaction); }} onDeleteRecord={(transactionId) => { onDeleteRecord(transactionId); setSelectedTransaction(null); }} />
-      <TransactionEditModal open={editingTransaction !== null} transaction={editingTransaction && transactions.find((entry) => entry.id === editingTransaction.id) || null} catalog={catalog} onClose={() => setEditingTransaction(null)} onSave={onSaveEdit} />
+      <InvoiceDetailModal open={currentSelectedTransaction !== null} transaction={currentSelectedTransaction} onClose={() => setSelectedTransaction(null)} onDeleteRecord={(transactionId) => { onDeleteRecord(transactionId); setSelectedTransaction(null); }} />
     </section>
   );
 }

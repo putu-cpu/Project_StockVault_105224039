@@ -242,7 +242,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .product-order-summary span { color: #737b71; font-size: 10px; }
 .product-order-summary strong { color: #263329; font-size: 12px; }
 .catalog-select-list { display: grid; gap: 10px; padding: 2px; }
-.catalog-select-row { display: grid; grid-template-columns: minmax(0, 1fr) 145px; align-items: center; gap: 14px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; padding: 14px 15px; transition: border-color .16s ease, background .16s ease, box-shadow .16s ease; }
+.catalog-select-row { display: grid; grid-template-columns: minmax(0, 1fr) 145px; align-items: center; gap: 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 14px 15px; transition: border-color .16s ease, background .16s ease, box-shadow .16s ease; }
 .catalog-select-row:hover { border-color: #059669; box-shadow: 0 3px 12px rgb(16 89 64 / 7%); }
 .catalog-select-row-active { border-color: #059669; background: #f3faf6; box-shadow: inset 0 0 0 1px #059669; }
 .catalog-select-product { display: flex; min-width: 0; align-items: center; gap: 10px; cursor: pointer; }
@@ -292,14 +292,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .empty-state .eyebrow { margin: 0; }
 .empty-state-mark { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #d5e4d4; border-radius: 6px; background: #edf5ec; color: #3b6d49; }
 .empty-state-compact { margin: 0; border: 0; border-radius: 0; background: #fff; padding: 30px 18px; }
-.transaction-edit-list { display: grid; max-height: 48vh; gap: 8px; overflow-y: auto; }
-.transaction-edit-row { display: grid; grid-template-columns: minmax(0, 1fr) 125px 35px; align-items: end; gap: 10px; border: 1px solid #e5e9e2; border-radius: 5px; background: #fbfcfa; padding: 10px; }
-.transaction-edit-quantity { width: 125px; }
-.transaction-edit-remove { width: 35px; height: 35px; color: #99473c; }
-.transaction-edit-add { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 9px; margin-top: 12px; }
-.edit-access-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; border: 1px solid #e6d8b9; border-radius: 5px; background: #fffaf0; padding: 11px 12px; color: #5f4c2a; font-size: 11px; }
-.edit-access-banner p + p { margin-top: 3px; color: #756647; font-size: 10px; line-height: 1.5; }
-.edit-access-state { align-self: center; color: #706148; font-size: 10px; font-weight: 650; }
 .hotel-record-tabs { display: flex; gap: 3px; overflow-x: auto; border-bottom: 1px solid #e7eae4; padding: 0 12px; }
 .hotel-record-tabs button { display: inline-flex; min-height: 42px; flex: 0 0 auto; align-items: center; border: 0; border-bottom: 2px solid transparent; background: transparent; padding: 0 10px; color: #70776d; cursor: pointer; font-size: 10px; font-weight: 650; white-space: nowrap; }
 .hotel-record-tabs button:hover, .hotel-record-tabs button.hotel-record-tab-active { border-bottom-color: #34714b; color: #285a3c; }
@@ -392,10 +384,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .secure-label { max-width: 94px; align-self: center; white-space: normal; }
   .panel-heading { min-height: 68px; padding: 13px 14px; }
   .delivery-arrival-banner { align-items: flex-start; flex-direction: column; }
-  .edit-access-banner { align-items: flex-start; flex-direction: column; }
-  .transaction-edit-row { grid-template-columns: minmax(0, 1fr) 95px 33px; gap: 6px; padding: 8px; }
-  .transaction-edit-quantity { width: 95px; }
-  .transaction-edit-add { grid-template-columns: minmax(0, 1fr); }
   .hotel-record-tabs { margin-right: -14px; margin-left: -14px; }
   .invoice-detail-badges { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .detail-label { min-width: 0; flex-wrap: wrap; gap: 4px; }
@@ -470,4 +458,23 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+.catalog-category-badge { display: inline-flex; min-height: 23px; align-items: center; border: 1px solid #dfe8df; border-radius: 999px; background: #f1f6f1; padding: 0 9px; color: #355a43; font-size: 9px; font-weight: 700; letter-spacing: .045em; }
+.product-row-actions { display: inline-flex; justify-content: flex-end; gap: 7px; }
+.product-row-actions .button-tertiary, .product-row-actions .button-danger { min-height: 30px; gap: 5px; padding: 0 8px; }
+.catalog-product-form-modal { max-width: 560px; padding: 0; }
+.catalog-product-form-fields { display: grid; gap: 17px; padding: 22px 23px; }
+.catalog-product-fields-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.catalog-product-form-footer { display: flex; justify-content: flex-end; gap: 9px; border-top: 1px solid #e4e9e1; padding: 14px 23px; }
+.catalog-product-form-footer .button-primary, .catalog-product-form-footer .button-danger { gap: 7px; }
+.catalog-delete-modal { max-width: 480px; padding: 0; }
+.catalog-delete-content { padding: 22px 23px; color: #4b5149; font-size: 13px; line-height: 1.65; }
+.catalog-delete-note { margin-top: 12px; border-left: 2px solid #d8a06a; padding-left: 10px; color: #77766c; font-size: 11px; }
+
+@media (max-width: 600px) {
+  .catalog-product-fields-grid { grid-template-columns: 1fr; }
+  .catalog-product-form-fields { padding: 17px; }
+  .catalog-product-form-footer { padding: 12px 17px; }
+  .product-row-actions { flex-direction: column; align-items: flex-end; }
 }

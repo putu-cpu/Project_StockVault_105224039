@@ -7,9 +7,10 @@ import { createSession } from "../actions/auth";
 
 interface LoginPageProps {
   onLogin: (user: User) => void;
+  statusMessage?: string;
 }
 
-export function LoginPage({ onLogin }: LoginPageProps) {
+export function LoginPage({ onLogin, statusMessage }: LoginPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -34,16 +35,23 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       return;
     }
 
+    try {
+      const session = await createSession(result.data.email, result.data.password);
+      if (!session.success) {
+        setGeneralError(session.message ?? "Sign-in failed. Check your credentials and try again.");
+        return;
+      }
+    }
+    catch (error) {
+      console.error("Could not establish the StokVault session.", error);
+      setGeneralError("Sign-in could not be completed. Check the server configuration and try again.");
+      return;
+    }
+
     const account = demoUsers.find((user) => user.email === result.data.email);
     if (!account) {
       setGeneralError("Kredensial tidak valid: akun mitra tidak terdaftar pada sistem.");
       return;
-    }
-
-    try {
-      await createSession(account.id);
-    } catch (e) {
-      console.warn("Session action warning:", e);
     }
 
     onLogin(account);
@@ -71,7 +79,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           <h2 id="login-title">Sign in to StokVault</h2>
           <p className="login-description">Open your supplier or hotel workspace.</p>
           
-          <form className="login-form" onSubmit={signIn} noValidate>
+          <form className="login-form" onSubmit={signIn} noValidate suppressHydrationWarning>
+            {statusMessage && <p className="field-error mt-3" role="alert">{statusMessage}</p>}
             <div className="mt-7">
               <label className="form-label" htmlFor="login-email">Username / Email</label>
               <input
@@ -86,6 +95,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 }}
                 placeholder="name@company.com"
                 required
+                suppressHydrationWarning
               />
               {emailError && (
                 <p className="field-error mt-1.5" role="alert" id="email-error">
@@ -107,6 +117,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                   if (passwordError) setPasswordError("");
                 }}
                 required
+                suppressHydrationWarning
               />
               {passwordError && (
                 <p className="field-error mt-1.5" role="alert" id="password-error">
@@ -121,7 +132,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               </p>
             )}
 
-            <button className="button-primary mt-5 w-full" type="submit">
+            <button className="button-primary mt-5 w-full" type="submit" suppressHydrationWarning>
               Sign In
             </button>
           </form>

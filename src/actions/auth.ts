@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { loginSchema } from "../schemas/auth";
 import { demoUsers } from "../data/mockData";
+import { createSessionToken } from "../lib/session";
 
 export interface ActionResponse {
   success: boolean;
@@ -12,22 +13,37 @@ export interface ActionResponse {
   fieldErrors?: Record<string, string[]>;
 }
 
-/**
- * Menerbitkan kuki sesi aman (HttpOnly, Secure, SameSite=Lax, Path=/)
- */
-export async function createSession(userId: string): Promise<string> {
+async function storeSession(userId: string): Promise<string> {
   const cookieStore = await cookies();
-  const sessionId = `sv_sess_${userId}_${Date.now()}`;
+  const sessionId = createSessionToken(userId);
 
   cookieStore.set("session_id", sessionId, {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24, // 24 jam dalam detik
   });
 
   return sessionId;
+}
+
+export async function createSession(
+  email: string,
+  password: string,
+): Promise<{ success: boolean; message?: string }> {
+  const validation = loginSchema.safeParse({ email, password });
+  if (!validation.success) {
+    return { success: false, message: "Enter a valid partner email and a non-empty password." };
+  }
+
+  const account = demoUsers.find((user) => user.email === validation.data.email);
+  if (!account) {
+    return { success: false, message: "The partner account is not registered in the demo system." };
+  }
+
+  await storeSession(account.id);
+  return { success: true };
 }
 
 /**
@@ -62,7 +78,7 @@ export async function loginAction(
     };
   }
 
-  await createSession(account.id);
+  await storeSession(account.id);
   revalidatePath("/");
   redirect("/");
 }
@@ -75,7 +91,7 @@ export async function logoutAction(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set("session_id", "", {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: 0,

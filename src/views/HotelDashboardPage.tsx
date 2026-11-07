@@ -17,17 +17,17 @@ interface HotelDashboardPageProps {
   hotelLocation: string;
   transactions: Transaction[];
   catalog: Item[];
+  onRefreshCatalog: (catalog: Item[]) => void;
   onCreateOrder: (items: TransactionItem[], durationMonths?: number) => void;
   onConfirmArrival: (transactionId: string) => void;
   onLockDelivery: (transactionId: string, received: Record<string, number>) => Promise<void>;
   onUpdateStock: (transactionId: string, itemId: string, remainingStock: number) => void;
   onConfirmPayment: (transactionId: string, invoiceMonth: number, method: PaymentMethod, receiptName?: string) => void;
   onTerminate: (transactionId: string) => void;
-  onApproveEditAccess: (transactionId: string) => void;
   onDeleteRecord: (transactionId: string) => void;
 }
 
-export function HotelDashboardPage({ hotelName, hotelLocation, transactions, catalog, onCreateOrder, onConfirmArrival, onLockDelivery, onUpdateStock, onConfirmPayment, onTerminate, onApproveEditAccess, onDeleteRecord }: HotelDashboardPageProps) {
+export function HotelDashboardPage({ hotelName, hotelLocation, transactions, catalog, onRefreshCatalog, onCreateOrder, onConfirmArrival, onLockDelivery, onUpdateStock, onConfirmPayment, onTerminate, onDeleteRecord }: HotelDashboardPageProps) {
   const [selectedId, setSelectedId] = useState(() => transactions[0]?.id ?? "");
   const [selectedMonth, setSelectedMonth] = useState(1);
   const [receivedDrafts, setReceivedDrafts] = useState<Record<string, string>>({});
@@ -74,21 +74,21 @@ export function HotelDashboardPage({ hotelName, hotelLocation, transactions, cat
         ? billingRows.filter((row) => row.transaction.monthlyInvoices.find((invoice) => invoice.month === row.month)?.paymentStatus === "PAID")
         : activeTab === "pending"
           ? transactions.filter((entry) => entry.status === "PENDING").map((entry) => ({ key: entry.id, transaction: entry }))
-          : transactions.filter((entry) => entry.status === "TERMINATED" || entry.status === "TERMINATION_REQUESTED").map((entry) => ({ key: entry.id, transaction: entry }));
+          : transactions.filter((entry) => entry.status === "TERMINATED").map((entry) => ({ key: entry.id, transaction: entry }));
 
   const tabCounts = {
     locked: transactions.filter((entry) => entry.status !== "PENDING").reduce((count, entry) => count + entry.items.length, 0),
     billing: billingRows.filter((row) => row.transaction.monthlyInvoices.find((invoice) => invoice.month === row.month)?.paymentStatus === "UNPAID").length,
     pending: transactions.filter((entry) => entry.status === "PENDING").length,
     paid: billingRows.filter((row) => row.transaction.monthlyInvoices.find((invoice) => invoice.month === row.month)?.paymentStatus === "PAID").length,
-    terminated: transactions.filter((entry) => entry.status === "TERMINATED" || entry.status === "TERMINATION_REQUESTED").length,
+    terminated: transactions.filter((entry) => entry.status === "TERMINATED").length,
   };
 
   if (!transaction) {
     return <section className="page-section" aria-labelledby="hotel-dashboard-title">
-      <div className="section-heading"><div><p className="eyebrow">HOTEL PARTNER / PRIVATE ACCOUNT</p><h1 id="hotel-dashboard-title">{hotelName}</h1><p className="section-intro"><MapPin aria-hidden="true" className="mr-1 inline" size={14} />{hotelLocation} · deliveries and invoices from CV. Alam Zempol.</p></div><button className="button-primary shrink-0" type="button" onClick={() => setOrderOpen(true)}><PackageCheck aria-hidden="true" size={16} /> Add items / create order</button><span className="secure-label"><ShieldCheck aria-hidden="true" size={15} /> HOTEL DATA ISOLATED</span></div>
-      <section className="panel hotel-operations-panel" aria-label="Hotel operations"><HotelOperationsTabs activeTab={activeTab} onChange={setActiveTab} counts={tabCounts} /><div className="empty-state"><span className="empty-state-mark"><PackageCheck aria-hidden="true" size={22} /></span><p className="eyebrow">CV. ALAM ZEMPOL / HOTEL WORKSPACE</p><h2>Your ledger starts here.</h2><p>Request the amenities your team needs from the shared supplier catalog. New deliveries will appear in this private hotel workspace.</p><button className="button-primary" type="button" onClick={() => setOrderOpen(true)}><PackageCheck aria-hidden="true" size={16} /> Add Items / Order Request</button></div></section>
-      <ProductCatalogModal open={orderOpen} mode="select" catalog={catalog} onClose={() => setOrderOpen(false)} onSubmitOrder={(items, _hotelId, durationMonths) => onCreateOrder(items, durationMonths)} />
+      <div className="section-heading"><div><p className="eyebrow">HOTEL PARTNER / PRIVATE ACCOUNT</p><h1 id="hotel-dashboard-title">{hotelName}</h1><p className="section-intro"><MapPin aria-hidden="true" className="mr-1 inline" size={14} />{hotelLocation} · deliveries and invoices from CV. Alam Zempol.</p></div><button className="button-primary shrink-0" type="button" onClick={() => setOrderOpen(true)}><PackageCheck aria-hidden="true" size={16} /> Browse supplier catalog</button><span className="secure-label"><ShieldCheck aria-hidden="true" size={15} /> HOTEL DATA ISOLATED</span></div>
+      <section className="panel hotel-operations-panel" aria-label="Hotel operations"><HotelOperationsTabs activeTab={activeTab} onChange={setActiveTab} counts={tabCounts} /><div className="empty-state"><span className="empty-state-mark"><PackageCheck aria-hidden="true" size={22} /></span><p className="eyebrow">CV. ALAM ZEMPOL / HOTEL WORKSPACE</p><h2>Your ledger starts here.</h2><p>Request the amenities your team needs from the shared supplier catalog. New deliveries will appear in this private hotel workspace.</p><button className="button-primary" type="button" onClick={() => setOrderOpen(true)}><PackageCheck aria-hidden="true" size={16} /> Browse supplier catalog</button></div></section>
+      <ProductCatalogModal open={orderOpen} catalog={catalog} onCatalogLoaded={onRefreshCatalog} onClose={() => setOrderOpen(false)} onSubmitOrder={(items, durationMonths) => onCreateOrder(items, durationMonths)} />
     </section>;
   }
 
@@ -125,7 +125,7 @@ export function HotelDashboardPage({ hotelName, hotelLocation, transactions, cat
     setBusy(true);
     setError("");
     try { await onLockDelivery(transaction.id, received); setActiveTab("locked"); setLockOpen(false); }
-    catch { setError("This delivery could not be locked. Please try again."); }
+    catch (caught) { setError(caught instanceof Error ? caught.message : "This delivery could not be locked. Please try again."); }
     finally { setBusy(false); }
   }
 
@@ -185,8 +185,6 @@ export function HotelDashboardPage({ hotelName, hotelLocation, transactions, cat
           {transaction.status === "PENDING" && transaction.deliveryStatus === "PREPARING" && <div className="delivery-arrival-banner"><div><p className="font-semibold">Delivery is being prepared</p><p>CV. Alam Zempol will update the shipment status once it is in transit.</p></div></div>}
           {transaction.status === "PENDING" && transaction.deliveryStatus === "IN_TRANSIT" && <div className="delivery-arrival-banner"><div><p className="font-semibold">Delivery in transit</p><p>Confirm physical arrival before entering received quantities.</p></div><button className="button-secondary" type="button" onClick={() => onConfirmArrival(transaction.id)}><PackageCheck aria-hidden="true" size={15} /> Confirm arrival</button></div>}
           {transaction.status === "PENDING" && transaction.deliveryStatus === "ARRIVED" && <div className="delivery-arrival-banner"><div><p className="font-semibold">Delivery arrived · awaiting sign-off</p><p>Confirm every physical quantity, then accept the delivery and lock this stock record.</p></div></div>}
-          {transaction.editAccessRequested && !transaction.editAccessApproved && transaction.status === "LOCKED" && <div className="edit-access-banner"><div><p className="font-semibold">Supplier requested edit access</p><p>Approving temporarily unlocks supplier changes. Saving the edit signs and locks the record again.</p></div><button className="button-secondary" type="button" onClick={() => onApproveEditAccess(transaction.id)}>Approve Edit Access</button></div>}
-          {transaction.editAccessApproved && transaction.status === "LOCKED" && <div className="edit-access-banner"><p className="font-semibold">Edit access approved. CV. Alam Zempol can update this record and re-lock it when saved.</p></div>}
           <DataTable items={lines} catalog={catalog} location={hotelLocation} calculationsEnabled={transaction.status !== "PENDING"} editable={transaction.status === "PENDING" && transaction.deliveryStatus === "ARRIVED" || transaction.status !== "PENDING" && transaction.paymentStatus === "UNPAID"} allowProductChanges={false} allowRemove={false} quantityValues={currentReceivedValues} remainingValues={currentRemainingValues} remainingReadOnlyLabel={transaction.status === "PENDING" ? "Enter after lock" : undefined} errors={errors} onQuantityReceivedChange={transaction.status === "PENDING" && transaction.deliveryStatus === "ARRIVED" ? (itemId, value) => setReceivedDrafts((current) => ({ ...current, [`${transaction.id}:${itemId}`]: value })) : undefined} onRemainingStockChange={transaction.status !== "PENDING" && transaction.paymentStatus === "UNPAID" ? updateRemaining : undefined} />
           {error && <p className="field-error mt-3" role="alert">{error}</p>}
           {transaction.status === "PENDING" && (transaction.deliveryStatus === "ARRIVED" ? <div className="mt-5 flex flex-col justify-between gap-3 border-t border-stone-200 pt-4 sm:flex-row sm:items-center"><p className="flex items-center gap-2 text-xs leading-5 text-stone-500"><PackageCheck aria-hidden="true" size={15} /> Confirm the received count for each product.</p><button className="button-primary" type="button" disabled={!canLock} onClick={() => setLockOpen(true)}><Check aria-hidden="true" size={16} /> Accept Delivery &amp; Lock Stock</button></div> : <p className="mt-4 border-t border-stone-200 pt-4 text-xs text-stone-500">Stock input and acceptance unlock when the seller marks this delivery as arrived.</p>)}
@@ -202,7 +200,7 @@ export function HotelDashboardPage({ hotelName, hotelLocation, transactions, cat
       <ModalConfirmation open={lockOpen} onClose={() => setLockOpen(false)} onConfirm={confirmLock} busy={busy} hotelName={hotelName} />
       <ModalConfirmation open={terminationOpen} onClose={() => setTerminationOpen(false)} onConfirm={() => { onTerminate(transaction.id); setActiveTab("terminated"); setTerminationOpen(false); }} hotelName={hotelName} title="Request contract termination?" description={<>CV. Alam Zempol must approve this request before the contract can end. Your locked inventory and invoice history will remain available.</>} confirmLabel="Send termination request" busyLabel="Submitting request..." />
       <PaymentModal open={paymentOpen} invoiceId={`${transaction.id}-M${selectedMonth}`} amount={activeInvoice && stockOpnameComplete ? formatIDR(activeInvoice.amount) : "Awaiting stock opname"} onClose={() => setPaymentOpen(false)} onConfirm={completePayment} />
-      <ProductCatalogModal open={orderOpen} mode="select" catalog={catalog} onClose={() => setOrderOpen(false)} onSubmitOrder={(items, _hotelId, durationMonths) => onCreateOrder(items, durationMonths)} />
+      <ProductCatalogModal open={orderOpen} catalog={catalog} onCatalogLoaded={onRefreshCatalog} onClose={() => setOrderOpen(false)} onSubmitOrder={(items, durationMonths) => onCreateOrder(items, durationMonths)} />
     </section>
   );
 }

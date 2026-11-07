@@ -9,12 +9,10 @@ interface InvoiceDetailModalProps {
   open: boolean;
   transaction: Transaction | null;
   onClose: () => void;
-  onRequestEdit?: (transactionId: string) => void;
-  onEditApproved?: (transaction: Transaction) => void;
   onDeleteRecord?: (transactionId: string) => void;
 }
 
-export function InvoiceDetailModal({ open, transaction, onClose, onRequestEdit, onEditApproved, onDeleteRecord }: InvoiceDetailModalProps) {
+export function InvoiceDetailModal({ open, transaction, onClose, onDeleteRecord }: InvoiceDetailModalProps) {
   const dialogRef = useFocusTrap<HTMLDivElement>(open, onClose);
   if (!open || !transaction) return null;
 
@@ -58,9 +56,6 @@ export function InvoiceDetailModal({ open, transaction, onClose, onRequestEdit, 
             >
               <ExternalLink size={12} /> Audit SHA-256
             </a>
-            {transaction.status === "LOCKED" && transaction.paymentStatus === "UNPAID" && onRequestEdit && !transaction.editAccessRequested && !transaction.editAccessApproved && <button className="button-secondary" type="button" onClick={() => onRequestEdit(transaction.id)}>Request Edit Access</button>}
-            {transaction.editAccessRequested && !transaction.editAccessApproved && <span className="edit-access-state">Awaiting hotel approval</span>}
-            {transaction.editAccessApproved && onEditApproved && <button className="button-primary" type="button" onClick={() => onEditApproved(transaction)}>Edit locked record</button>}
             {transaction.status === "TERMINATED" && onDeleteRecord && <button className="button-danger" type="button" onClick={() => onDeleteRecord(transaction.id)}>Delete Record</button>}
             <button className="button-secondary" type="button" onClick={onClose}>Done</button>
           </div>

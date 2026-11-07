@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Supplier {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  name         String
+  legalName    String?
+  email        String?
+  phone        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  users        User[]
+  products     Product[]
+  transactions Transaction[]
+}
+
+model Hotel {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  name         String
+  location     String
+  contactEmail String?
+  phone        String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  users        User[]
+  transactions Transaction[]
+}
+
+model User {
+  id                         String            @id @default(cuid())
+  email                      String            @unique
+  name                       String
+  passwordHash               String
+  role                       String
+  supplierId                 String?
+  hotelId                    String?
+  isActive                   Boolean           @default(true)
+  createdAt                  DateTime          @default(now())
+  updatedAt                  DateTime          @updatedAt
+  supplier                   Supplier?         @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  hotel                      Hotel?            @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  createdTransactions        Transaction[]     @relation("TransactionCreator")
+  lockedTransactions         Transaction[]     @relation("TransactionLocker")
+  approvedEditTransactions   Transaction[]     @relation("EditApprover")
+  reviewedTerminationRecords Transaction[]     @relation("TerminationReviewer")
+  stockCounts                TransactionItem[] @relation("StockCounter")
+  processedPayments          Payment[]         @relation("PaymentProcessor")
+  auditEvents                AuditEvent[]      @relation("AuditActor")
+
+  @@index([supplierId, role])
+  @@index([hotelId, role])
+}
+
+model Product {
+  id               String            @id @default(cuid())
+  supplierId       String
+  sku              String
+  name             String
+  category         String
+  size             String
+  unitPrice        Int
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  supplier         Supplier          @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  transactionItems TransactionItem[]
+
+  @@unique([supplierId, sku])
+  @@index([supplierId, isActive])
+}
+
+model Transaction {
+  id                      String            @id @default(cuid())
+  reference               String            @unique
+  supplierId              String
+  hotelId                 String
+  createdById             String
+  lockedById              String?
+  editAccessApprovedById  String?
+  terminationReviewedById String?
+  contractDurationMonths  Int
+  status                  String            @default("PENDING")
+  deliveryStatus          String            @default("PREPARING")
+  editAccessRequestedAt   DateTime?
+  editAccessApprovedAt    DateTime?
+  terminationRequestedAt  DateTime?
+  terminatedAt            DateTime?
+  hashSignature           String?           @unique
+  lockedAt                DateTime?
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  deletedAt               DateTime?
+  supplier                Supplier          @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  hotel                   Hotel             @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  createdBy               User              @relation("TransactionCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  lockedBy                User?             @relation("TransactionLocker", fields: [lockedById], references: [id], onDelete: Restrict)
+  editAccessApprovedBy    User?             @relation("EditApprover", fields: [editAccessApprovedById], references: [id], onDelete: Restrict)
+  terminationReviewedBy   User?             @relation("TerminationReviewer", fields: [terminationReviewedById], references: [id], onDelete: Restrict)
+  items                   TransactionItem[]
+  invoices                Invoice[]
+  auditEvents             AuditEvent[]
+
+  @@index([supplierId, createdAt])
+  @@index([hotelId, createdAt])
+  @@index([status, deliveryStatus])
+}
+
+model TransactionItem {
+  id                      String        @id @default(cuid())
+  transactionId           String
+  productId               String
+  skuSnapshot             String
+  nameSnapshot            String
+  categorySnapshot        String
+  sizeSnapshot            String
+  unitPriceSnapshot       Int
+  quantitySent            Int
+  quantityReceived        Int?
+  remainingStock          Int?
+  remainingStockCountedAt DateTime?
+  countedById             String?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+  transaction             Transaction   @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  product                 Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  countedBy               User?         @relation("StockCounter", fields: [countedById], references: [id], onDelete: Restrict)
+  invoiceLines            InvoiceLine[]
+
+  @@unique([transactionId, productId])
+  @@index([productId])
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  transactionId String
+  period        Int
+  dueDate       DateTime
+  status        String        @default("UNPAID")
+  totalAmount   Int           @default(0)
+  consumedUnits Int           @default(0)
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  transaction   Transaction   @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  lines         InvoiceLine[]
+  payments      Payment[]
+
+  @@unique([transactionId, period])
+  @@index([status, dueDate])
+}
+
+model InvoiceLine {
+  id                String          @id @default(cuid())
+  invoiceId         String
+  transactionItemId String
+  quantityConsumed  Int
+  unitPrice         Int
+  lineTotal         Int
+  createdAt         DateTime        @default(now())
+  invoice           Invoice         @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  transactionItem   TransactionItem @relation(fields: [transactionItemId], references: [id], onDelete: Restrict)
+
+  @@unique([invoiceId, transactionItemId])
+  @@index([transactionItemId])
+}
+
+model Payment {
+  id                String    @id @default(cuid())
+  invoiceId         String
+  processedById     String?
+  method            String
+  status            String    @default("PENDING")
+  amount            Int
+  receiptName       String?
+  receiptStorageKey String?
+  providerReference String?   @unique
+  processedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  invoice           Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  processedBy       User?     @relation("PaymentProcessor", fields: [processedById], references: [id], onDelete: Restrict)
+
+  @@index([invoiceId, createdAt])
+  @@index([status, createdAt])
+}
+
+model AuditEvent {
+  id            String       @id @default(cuid())
+  transactionId String?
+  actorId       String?
+  action        String
+  detailsJson   String?
+  previousHash  String?
+  eventHash     String       @unique
+  createdAt     DateTime     @default(now())
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  actor         User?        @relation("AuditActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([transactionId, createdAt])
+  @@index([actorId, createdAt])
+}
