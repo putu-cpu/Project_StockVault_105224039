@@ -1,9 +1,9 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { demoUsers } from "../data/mockData";
+import { getSessionUser } from "../lib/session";
+import { isAuthorized } from "../lib/access-control";
 import { generateAuthenticatedSignature } from "../utils/crypto";
 
 export const lockDeliverySchema = z.object({
@@ -38,22 +38,11 @@ export async function lockDeliveryAction(
   input: LockDeliveryInput,
 ): Promise<TransactionActionResult> {
   // 1. SESI: Verifikasi sesi kuki pengguna di sisi server
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("session_id")?.value;
-
-  if (!sessionCookie) {
-    return {
-      success: false,
-      message: "Tidak terautentikasi: Sesi telah kedaluwarsa atau belum masuk.",
-    };
-  }
-
-  // Mengurai ID akun dari token sesi opaque
-  const user = demoUsers.find((u) => sessionCookie.includes(u.id));
+  const user = await getSessionUser();
   if (!user) {
     return {
       success: false,
-      message: "Sesi tidak valid: Akun pengguna tidak ditemukan.",
+      message: "Tidak terautentikasi: Sesi telah kedaluwarsa atau belum masuk.",
     };
   }
 
@@ -71,7 +60,7 @@ export async function lockDeliveryAction(
 
   // 3. VALIDASI SEMANTIK: Aturan logika bisnis, RBAC, dan integritas data
   // - Pemeriksaan Peran: Hanya BUYER (staf hotel) yang berhak mengunci penerimaan barang fisik
-  if (user.role !== "BUYER" || !user.hotelId) {
+  if (!isAuthorized(user, "delivery:lock")) {
     return {
       success: false,
       message: "Pelanggaran Otorisasi (RBAC): Hanya staf hotel yang berhak mengunci data pengiriman.",

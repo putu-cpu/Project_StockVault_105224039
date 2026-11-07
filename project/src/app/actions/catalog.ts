@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "../../../lib/prisma";
 import { productSchema } from "../../../lib/validations";
 import { getSessionUser } from "../../lib/session";
+import { isAuthorized } from "../../lib/access-control";
 import type { Item } from "../../types";
 
 type CatalogFieldErrors = Partial<Record<"name" | "category" | "packageSize" | "price", string[]>>;
@@ -15,7 +16,7 @@ export type CatalogActionResult =
 
 async function getSellerSupplierId(): Promise<string | CatalogActionResult> {
   const user = await getSessionUser();
-  if (user?.role !== "SELLER") {
+  if (!isAuthorized(user, "catalog:write")) {
     return { success: false, message: "Only an authenticated supplier can manage the master catalog." };
   }
 
