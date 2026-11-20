@@ -1,43 +1,96 @@
-import { describe, it, expect } from 'vitest';
-import { generateDataHash, verifyDataHash, type TransactionPayload } from './crypto';
+import { describe, expect, it } from "vitest";
+import {
+  generateAuthenticatedSignature,
+  generateCSPRNGNonce,
+  verifyAuthenticatedSignature,
+  type TransactionPayload,
+} from "./crypto";
 
-describe('StokVault Cryptographic Component Unit Tests', () => {
-  const validPayload: TransactionPayload = {
-    transactionId: 'LF-2610-005',
-    hotelId: 'grand-hyatt',
-    timestamp: '2026-10-11T10:00:00Z',
-    totalItems: 22
-  };
+const TEST_KEY = "0123456789abcdef".repeat(4);
 
-  // UJI POSITIF 1
-  it('1. Output hash harus berformat Hexadecimal SHA-256 sepanjang 64 karakter', () => {
-    const hash = generateDataHash(validPayload);
-    expect(hash).toHaveLength(64);
-    expect(hash).toMatch(/^[a-f0-9]{64}$/);
+const validPayload: TransactionPayload = {
+  transactionId: "LF-2610-005",
+  hotelId: "grand-hyatt",
+  timestamp: "2026-10-11T10:00:00Z",
+  totalItems: 22,
+  itemsJson: '[{"sku":"soap-natural-100","quantity":22}]',
+};
+
+describe("StokVault authenticated transaction signatures", () => {
+  it("generates a 64-character hexadecimal HMAC and a 128-bit CSPRNG nonce", () => {
+    const signature = generateAuthenticatedSignature(
+      validPayload,
+      undefined,
+      TEST_KEY,
+    );
+
+    expect(signature.authTag).toMatch(/^[a-f0-9]{64}$/);
+    expect(signature.nonce).toMatch(/^[a-f0-9]{32}$/);
+    expect(signature.aad).toBe(
+      `${validPayload.hotelId}:${validPayload.timestamp}:${validPayload.transactionId}`,
+    );
+    expect(generateCSPRNGNonce()).toMatch(/^[a-f0-9]{32}$/);
   });
 
-  // UJI POSITIF 2
-  it('2. Verifikasi data harus berhasil (true) jika payload tidak diubah', () => {
-    const hash = generateDataHash(validPayload);
-    const isValid = verifyDataHash(validPayload, hash);
-    expect(isValid).toBe(true);
+  it("verifies an untampered payload with the correct key", () => {
+    const signature = generateAuthenticatedSignature(
+      validPayload,
+      undefined,
+      TEST_KEY,
+    );
+
+    expect(verifyAuthenticatedSignature(validPayload, signature, TEST_KEY)).toBe(
+      true,
+    );
   });
 
-  // UJI POSITIF 3
-  it('3. Fungsi harus bersifat deterministik (input sama menghasilkan hash identik)', () => {
-    const hashA = generateDataHash(validPayload);
-    const hashB = generateDataHash(validPayload);
-    expect(hashA).toBe(hashB);
+  it("generates different nonces and authentication tags for separate calls", () => {
+    const first = generateAuthenticatedSignature(
+      validPayload,
+      undefined,
+      TEST_KEY,
+    );
+    const second = generateAuthenticatedSignature(
+      validPayload,
+      undefined,
+      TEST_KEY,
+    );
+
+    expect(first.nonce).not.toBe(second.nonce);
+    expect(first.authTag).not.toBe(second.authTag);
   });
 
-  // UJI NEGATIF / BATAS (Edge Case)
-  it('4. [UJI NEGATIF] Verifikasi harus gagal (false) jika data transaksi dimanipulasi', () => {
-    const originalHash = generateDataHash(validPayload);
-    
-    // Simulasi manipulasi data (jumlah barang diubah)
+  it("fails closed for modified payloads, wrong keys, and corrupted signature data", () => {
+    const signature = generateAuthenticatedSignature(
+      validPayload,
+      undefined,
+      TEST_KEY,
+    );
     const tamperedPayload = { ...validPayload, totalItems: 999 };
-    const isValid = verifyDataHash(tamperedPayload, originalHash);
-    
-    expect(isValid).toBe(false);
+    const wrongKey = "fedcba9876543210".repeat(4);
+    const corruptedTag = {
+      ...signature,
+      authTag: `${signature.authTag[0] === "0" ? "1" : "0"}${signature.authTag.slice(1)}`,
+    };
+    const corruptedNonce = {
+      ...signature,
+      nonce: `${signature.nonce[0] === "0" ? "1" : "0"}${signature.nonce.slice(1)}`,
+    };
+
+    expect(
+      verifyAuthenticatedSignature(tamperedPayload, signature, TEST_KEY),
+    ).toBe(false);
+    expect(verifyAuthenticatedSignature(validPayload, signature, wrongKey)).toBe(
+      false,
+    );
+    expect(
+      verifyAuthenticatedSignature(validPayload, corruptedTag, TEST_KEY),
+    ).toBe(false);
+    expect(
+      verifyAuthenticatedSignature(validPayload, corruptedNonce, TEST_KEY),
+    ).toBe(false);
+    expect(
+      verifyAuthenticatedSignature(validPayload, { ...signature, nonce: "bad" }, TEST_KEY),
+    ).toBe(false);
   });
 });

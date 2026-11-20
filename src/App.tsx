@@ -7,21 +7,9 @@ import { Sidebar, type SidebarWorkspace } from "./components/Sidebar";
 import { HotelDashboardPage } from "./views/HotelDashboardPage";
 import { LoginPage } from "./views/LoginPage";
 import { SellerDashboardPage } from "./views/SellerDashboardPage";
-import { generateDataHash } from "./utils/crypto";
+import { lockDeliveryAction } from "./actions/transactions";
 import { logoutAction } from "./actions/auth";
 import type { DeliveryStatus, Item, PaymentMethod, Transaction, TransactionItem, User } from "./types";
-
-async function signDeliverySnapshot(transaction: Transaction, items: TransactionItem[]) {
-  const payload = {
-    transactionId: transaction.id,
-    hotelId: transaction.hotelId,
-    hotel: transaction.hotel,
-    location: transaction.location,
-    items: items.map(({ item, quantitySent, quantityReceived }) => ({ item, quantitySent, quantityReceived })),
-    signedAt: new Date().toISOString(),
-  };
-  return `SHA256: ${generateDataHash(payload)}`;
-}
 
 interface AppProps {
   initialCatalog: Item[];
@@ -92,9 +80,16 @@ export default function App({ initialCatalog, catalogTable }: AppProps) {
       }
       return { ...line, quantityReceived, remainingStock: 0, remainingStockConfirmed: false };
     });
-    const hashSignature = await signDeliverySnapshot(transaction, items);
+    const signatureResult = await lockDeliveryAction({
+      transactionId,
+      receivedQuantities,
+    });
+    if (!signatureResult.success || !signatureResult.signature) {
+      throw new Error(signatureResult.message ?? "Could not authenticate the transaction.");
+    }
+
     setTransactions((current) => current.map((transaction) => transaction.id === transactionId
-      ? { ...transaction, items, status: "LOCKED", hashSignature }
+      ? { ...transaction, items, status: "LOCKED", hashSignature: signatureResult.signature }
       : transaction));
   }
 
